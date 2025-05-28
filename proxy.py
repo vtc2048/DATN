@@ -1,10 +1,10 @@
+import os
 from flask import Flask, jsonify
 from flask_cors import CORS
 import requests
-import os
 
 app = Flask(__name__)
-CORS(app)  # Cho phép CORS
+CORS(app)
 
 API_URL = 'http://vngalaxy.vn:5000/get_data'
 TOKEN = '43497e17-9d24-4b08-97f1-4a08366bb9f9'
@@ -22,5 +22,5 @@ def get_data():
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5500) 
-
+    port = int(os.environ.get('PORT', 5500))  # Lấy cổng từ biến môi trường, mặc định 5500 nếu không có
+    app.run(debug=False, host='0.0.0.0', port=port)  # Tắt debug và dùng cổng động
