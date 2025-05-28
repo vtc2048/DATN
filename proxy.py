@@ -1,6 +1,7 @@
 from flask import Flask, jsonify
 from flask_cors import CORS
 import requests
+import os
 
 app = Flask(__name__)
 CORS(app)  # Cho phép CORS
@@ -21,5 +22,6 @@ def get_data():
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(debug=False, host='0.0.0.0', port=port)
 
