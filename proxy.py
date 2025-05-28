@@ -1,13 +1,21 @@
 import os
-from flask import Flask, jsonify
+from flask import Flask, jsonify, send_from_directory
 from flask_cors import CORS
 import requests
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='static')
 CORS(app)
 
 API_URL = 'http://vngalaxy.vn:5000/get_data'
-TOKEN = '43497e17-9d24-4b08-97f1-4a08366bb9f9'
+TOKEN = '43497e17-9d24-4b08-97f1-4a08366bb9f1'
+
+@app.route('/')
+def serve_index():
+    return send_from_directory(app.static_folder, 'index.html')
+
+@app.route('/<path:path>')
+def serve_static(path):
+    return send_from_directory(app.static_folder, path)
 
 @app.route('/api/data', methods=['GET'])
 def get_data():
@@ -20,7 +28,3 @@ def get_data():
         return jsonify(response.json())
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-
-if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5500))  # Lấy cổng từ biến môi trường, mặc định 5500 nếu không có
-    app.run(debug=False, host='0.0.0.0', port=port)  # Tắt debug và dùng cổng động
