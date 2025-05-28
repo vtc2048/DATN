@@ -1,0 +1,226 @@
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+.tabs {
+    display: flex;
+    background-color: #333;
+    color: #fff;
+    justify-content: center;
+}
+
+.tablink {
+    background-color: inherit;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    padding: 14px 16px;
+    transition: 0.3s;
+    color: #fff;
+}
+
+.tablink:hover {
+    background-color: #555;
+}
+
+.tabcontent {
+    display: none;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+    height: 600px;
+}
+
+.home-container {
+    display: flex;
+    height: 100%;
+}
+
+.map-container {
+    position: relative;
+    flex: 1;
+}
+
+.district-buttons {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px;
+    background-color: #f9f9f9;
+    border-bottom: 1px solid #ddd;
+}
+
+.district-buttons button {
+    padding: 5px 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    background-color: #fff;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.district-buttons button:hover {
+    background-color: #e0e0e0;
+}
+
+#map {
+    width: 100%;
+    height: calc(100% - 50px); /* Điều chỉnh chiều cao để dành chỗ cho nút */
+}
+
+.aqi-bar {
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80%;
+    height: 40px;
+    display: flex;
+    background: linear-gradient(to right, #00e400, #ffff00, #ff7e00, #ff0000, #99004c, #7e0023);
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+    z-index: 1000;
+}
+
+.aqi-segment {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-weight: bold;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+    white-space: nowrap;
+}
+
+.aqi-segment.good { background: #00e400; }
+.aqi-segment.moderate { background: #ffff00; }
+.aqi-segment.unhealthy-for-sensitive { background: #ff7e00; }
+.aqi-segment.unhealthy { background: #ff0000; }
+.aqi-segment.very-unhealthy { background: #99004c; }
+.aqi-segment.hazardous { background: #7e0023; }
+
+.aqi-indicator {
+    position: absolute;
+    width: 20px;
+    height: 40px;
+    background: #fff;
+    border: 2px solid #000;
+    top: 0;
+    transform: translateX(-50%);
+    z-index: 2;
+}
+
+.sidebar {
+    width: 250px;
+    padding: 20px;
+    background-color: #f9f9f9;
+    border-right: 1px solid #ddd;
+    overflow-y: auto;
+    height: 100%;
+}
+
+.sidebar h2 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 20px;
+}
+
+.sensor-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.sensor-card {
+    display: flex;
+    align-items: center;
+    background: #fff;
+    padding: 10px;
+    border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.sensor-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.sensor-icon {
+    width: 24px;
+    height: 24px;
+    margin-right: 10px;
+    object-fit: contain;
+}
+
+.sensor-info {
+    flex: 1;
+}
+
+.sensor-name {
+    margin: 0;
+    font-size: 0.9em;
+    color: #666;
+}
+
+.sensor-value {
+    margin: 0;
+    font-size: 1.2em;
+    font-weight: bold;
+    color: #333;
+}
+
+/* Styles cho tab Liên Hệ */
+.contact-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    background-color: #f9f9f9;
+}
+
+.contact-buttons {
+    display: flex;
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.contact-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 20px;
+    border-radius: 5px;
+    color: #fff;
+    text-decoration: none;
+    font-weight: bold;
+    transition: 0.3s;
+}
+
+.contact-btn:hover {
+    opacity: 0.8;
+}
+
+.contact-btn.facebook {
+    background-color: #3b5998;
+}
+
+.contact-btn.zalo {
+    background-color: #0068ff;
+}
+
+.contact-btn.instagram {
+    background-color: #e1306c;
+}
+
+.contact-btn.gmail {
+    background-color: #d14836;
+}

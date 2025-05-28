@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Hệ thống quan trắc môi trường</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" />
+    <style>
+        .aqi-marker {
+            position: relative;
+            text-align: center;
+        }
+        .aqi-sign {
+            width: 60px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #000;
+            border-radius: 5px;
+            font-weight: bold;
+            color: #000;
+            position: absolute;
+            top: -40px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        .aqi-pole {
+            background-color: #fff;
+            width: 10px;
+            height: 40px;
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="tabs">
+            <button class="tablink" onclick="openTab(event, 'Home')">Trang Chủ</button>
+            <button class="tablink" onclick="openTab(event, 'Chart')">Biểu Đồ</button>
+            <button class="tablink" onclick="openTab(event, 'Contact')">Liên Hệ</button>
+        </div>
+
+        <div id="Home" class="tabcontent">
+            <div class="home-container">
+                <div class="sidebar">
+                    <h2>Thông số cảm biến</h2>
+                    <div class="sensor-cards">
+                        <div class="sensor-card">
+                            <img src="img/temp.png" alt="Thermometer" class="sensor-icon">
+                            <div class="sensor-info">
+                                <p class="sensor-name">Nhiệt độ</p>
+                                <p class="sensor-value" id="temperature">--</p>
+                            </div>
+                        </div>
+                        <div class="sensor-card">
+                            <img src="img/hum.png" alt="Humidity" class="sensor-icon">
+                            <div class="sensor-info">
+                                <p class="sensor-name">Độ ẩm</p>
+                                <p class="sensor-value" id="humidity">--</p>
+                            </div>
+                        </div>
+                        <div class="sensor-card">
+                            <img src="img/no2.png" alt="NO2" class="sensor-icon">
+                            <div class="sensor-info">
+                                <p class="sensor-name">NO2</p>
+                                <p class="sensor-value" id="no2">--</p>
+                            </div>
+                        </div>
+                        <div class="sensor-card">
+                            <img src="img/so2.png" alt="SO2" class="sensor-icon">
+                            <div class="sensor-info">
+                                <p class="sensor-name">SO2</p>
+                                <p class="sensor-value" id="so2">--</p>
+                            </div>
+                        </div>
+                        <div class="sensor-card">
+                            <img src="img/pm10.png" alt="PM10" class="sensor-icon">
+                            <div class="sensor-info">
+                                <p class="sensor-name">PM10</p>
+                                <p class="sensor-value" id="pm10">--</p>
+                            </div>
+                        </div>
+                        <div class="sensor-card">
+                            <img src="img/pm25.png" alt="PM2.5" class="sensor-icon">
+                            <div class="sensor-info">
+                                <p class="sensor-name">PM2.5</p>
+                                <p class="sensor-value" id="pm25">--</p>
+                            </div>
+                        </div>
+                        <div class="sensor-card">
+                            <img src="img/co.png" alt="CO" class="sensor-icon">
+                            <div class="sensor-info">
+                                <p class="sensor-name">CO</p>
+                                <p class="sensor-value" id="co">--</p>
+                            </div>
+                        </div>
+                        <div class="sensor-card">
+                            <img src="img/uv.png" alt="UV" class="sensor-icon">
+                            <div class="sensor-info">
+                                <p class="sensor-name">UV</p>
+                                <p class="sensor-value" id="uv">--</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="map-container">
+                    <div class="district-buttons">
+                        <button onclick="zoomToDistrict([16.068, 108.220])">Hải Châu</button>
+                        <button onclick="zoomToDistrict([16.050, 108.190])">Thanh Khê</button>
+                        <button onclick="zoomToDistrict([16.100, 108.250])">Sơn Trà</button>
+                        <button onclick="zoomToDistrict([16.030, 108.250])">Ngũ Hành Sơn</button>
+                        <button onclick="zoomToDistrict([16.050, 108.170])">Cẩm Lệ</button>
+                        <button onclick="zoomToDistrict([16.100, 108.170])">Liên Chiểu</button>
+                        <button onclick="zoomToDistrict([16.000, 108.100])">Hòa Vang</button>
+                        <button onclick="zoomToDistrict([16.500, 111.500])">Hoàng Sa</button>
+                    </div>
+                    <div id="map"></div>
+                    <div class="aqi-bar">
+                        <div class="aqi-segment good">Tốt</div>
+                        <div class="aqi-segment moderate">Trung bình</div>
+                        <div class="aqi-segment unhealthy-for-sensitive">Kém</div>
+                        <div class="aqi-segment unhealthy">Xấu</div>
+                        <div class="aqi-segment very-unhealthy">Rất xấu</div>
+                        <div class="aqi-segment hazardous">Nguy hại</div>
+                        <div class="aqi-indicator" id="aqiIndicator"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="Chart" class="tabcontent" style="display:none;">
+            <h2>Biểu Đồ Thông Số Cảm Biến</h2>
+            <canvas id="sensorChart"></canvas>
+        </div>
+
+        <div id="Contact" class="tabcontent" style="display:none;">
+            <div class="contact-container">
+                <h2>Liên Hệ Với Chúng Tôi</h2>
+                <div class="contact-buttons">
+                    <a href="https://facebook.com" target="_blank" class="contact-btn facebook">
+                        <i class="fab fa-facebook-f"></i> Facebook
+                    </a>
+                    <a href="https://zalo.me" target="_blank" class="contact-btn zalo">
+                        <i class="fas fa-comment-dots"></i> Zalo
+                    </a>
+                    <a href="https://instagram.com" target="_blank" class="contact-btn instagram">
+                        <i class="fab fa-instagram"></i> Instagram
+                    </a>
+                    <a href="/cdn-cgi/l/email-protection#1a7f627b776a767f5a7d777b737634797577" class="contact-btn gmail">
+                        <i class="fas fa-envelope"></i> Gmail
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="script.js"></script>
+    <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'93d111a39be3b05b',t:'MTc0Njc5MjM2Ni4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>

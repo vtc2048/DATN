@@ -1,0 +1,7 @@
+services:
+  - type: web
+    name: datn-web
+    env: python
+    plan: free
+    buildCommand: ""
+    startCommand: python proxy.py
