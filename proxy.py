@@ -3,6 +3,7 @@ from flask_cors import CORS
 import requests
 import os
 
+print("✅ proxy.py is running...")
 app = Flask(__name__)
 CORS(app)  # Cho phép CORS
 
@@ -22,5 +23,7 @@ def get_data():
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
-    app.run(debug=False, host='0.0.0.0', port=5560) 
+    port = int(os.environ.get("PORT", 5000))
+    app.run(debug=False, host='0.0.0.0', port=port)
+ 
 
