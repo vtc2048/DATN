@@ -74,7 +74,7 @@ function createAQIIcon(aqi) {
 }
 
 function fetchData() {
-    fetch('http://localhost:5001/api/data')
+    fetch('/api/data')
         .then(res => res.json())
         .then(data => {
             const latest = data[data.length - 1];
