@@ -4,14 +4,8 @@ import requests
 import os
 
 app = Flask(__name__)
-CORS(app)  # Cho phép truy cập từ frontend
+CORS(app)  # Cho phép CORS
 
-# ✅ Route mặc định để tránh 404 trên trang chủ
-@app.route('/')
-def home():
-    return "✅ Flask proxy API is running on Render!"
-
-# ✅ API thật từ hệ thống cảm biến
 API_URL = 'http://vngalaxy.vn:5000/get_data'
 TOKEN = '43497e17-9d24-4b08-97f1-4a08366bb9f9'
 
@@ -27,7 +21,6 @@ def get_data():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-# ✅ Run Flask với host và port phù hợp Render
 if __name__ == '__main__':
-    port = int(os.environ.get("PORT", 5000))
-    app.run(debug=False, host='0.0.0.0', port=port)
+    app.run(debug=False, host='0.0.0.0', port=5500) 
+
