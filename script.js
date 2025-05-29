@@ -60,7 +60,7 @@ function getAQIColor(aqi) {
     if (aqi <= 150) return '#ff7e00'; // Kém
     if (aqi <= 200) return '#ff0000'; // Xấu
     if (aqi <= 300) return '#99004c'; // Rất xấu
-    return '#7e0023'; // Nguy hại 
+    return '#7e0023'; // Nguy hại app.run(debug=True, host='0.0.0.0', port=5000)
 }
 
 function createAQIIcon(aqi) {
@@ -74,7 +74,7 @@ function createAQIIcon(aqi) {
 }
 
 function fetchData() {
-    fetch('https://datnw.onrender.com/api/data')
+    fetch('http://localhost:5001/api/data')
         .then(res => res.json())
         .then(data => {
             const latest = data[data.length - 1];
