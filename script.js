@@ -74,7 +74,7 @@ function createAQIIcon(aqi) {
 }
 
 function fetchData() {
-    fetch('/api/data')
+    fetch('https://datnw.onrender.com/api/data')
         .then(res => res.json())
         .then(data => {
             const latest = data[data.length - 1];
