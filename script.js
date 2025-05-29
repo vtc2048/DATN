@@ -81,6 +81,7 @@ function fetchData() {
                 marker.setLatLng([lat, lng]);
             }
 
+            // Xoá vòng tròn trùng vị trí
             const thresholdMeters = 5;
             for (let i = 0; i < aqiCircles.length; i++) {
                 const c = aqiCircles[i];
@@ -99,6 +100,7 @@ function fetchData() {
             }).addTo(map).bindPopup(`AQI: ${aqiData.aqi} (${aqiData.level})`);
             aqiCircles.push(circle);
 
+            // Gửi về server
             fetch('/api/log', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -109,6 +111,7 @@ function fetchData() {
                 })
             });
 
+            // Hiển thị thông số
             document.getElementById("temperature").textContent = obj.temperature.toFixed(1) + " °C";
             document.getElementById("humidity").textContent = obj.humidity.toFixed(1) + " %";
             document.getElementById("no2").textContent = obj.no2 + " µg/m³";
