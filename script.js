@@ -77,7 +77,8 @@ function fetchData() {
     fetch('https://datnw.onrender.com/api/data')
         .then(res => res.json())
         .then(data => {
-            const latest = data[data.length - 1];
+            //const latest = data[data.length - 1];
+            const latest = data[00];
             const obj = latest.object;
             if (!obj) throw new Error("Không tìm thấy object");
 
