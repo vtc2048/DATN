@@ -92,10 +92,10 @@ function fetchData() {
 
             // Vẽ vòng tròn mới
             const circle = L.circle([lat, lng], {
-                color: aqiColor,
+                stroke: false,
                 fillColor: aqiColor,
                 fillOpacity: 0.6,
-                radius: 5
+                radius: 10
             }).addTo(map).bindPopup(`AQI: ${aqiData.aqi} (${aqiData.level})`);
             aqiCircles.push(circle);
 
@@ -154,7 +154,7 @@ function loadSavedAQI() {
                     color,
                     fillColor: color,
                     fillOpacity: 0.6,
-                    radius: 5
+                    radius: 10
                 }).addTo(map).bindPopup(`AQI: ${item.aqi} (${item.level})`);
                 aqiCircles.push(circle);
             });
