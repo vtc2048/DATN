@@ -5,7 +5,7 @@ body {
 
 .container {
     display: flex;
-    flex-direction: column;
+    flex-direction: column; 
     height: 100vh;
 }
 
@@ -71,7 +71,7 @@ body {
 
 #map {
     width: 100%;
-    height: calc(100% - 50px); /* Điều chỉnh chiều cao để dành chỗ cho nút */
+    height: calc(100% - 50px); /* Điều  cho nút */
 }
 
 .aqi-bar {
