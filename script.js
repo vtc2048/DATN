@@ -151,7 +151,7 @@ function loadSavedAQI() {
                 // Vẽ vòng tròn mới
                 const color = getAQIColor(item.level);
                 const circle = L.circle(latlng, {
-                    color,
+                    stroke: false,
                     fillColor: color,
                     fillOpacity: 0.6,
                     radius: 10
