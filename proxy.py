@@ -1,25 +1,33 @@
 from flask import Flask, jsonify
+from flask_cors import CORS
+import requests
 import os
 
 app = Flask(__name__)
+CORS(app)  # Cho phép truy cập từ frontend
 
-@app.route('/api/data')
-def test_data():
-    return jsonify({
-        "object": {
-            "temperature": 30.5,
-            "humidity": 70,
-            "latitude": 16.05,
-            "longitude": 108.2,
-            "pm25": 40,
-            "pm10": 50,
-            "no2": 0.02,
-            "so2": 0.01,
-            "co": 0.05,
-            "uv": 5.5
+# ✅ Route mặc định để tránh 404 trên trang chủ
+@app.route('/')
+def home():
+    return "✅ Flask proxy API is running on Render!"
+
+# ✅ API thật từ hệ thống cảm biến
+API_URL = 'http://vngalaxy.vn:5000/get_data'
+TOKEN = '43497e17-9d24-4b08-97f1-4a08366bb9f9'
+
+@app.route('/api/data', methods=['GET'])
+def get_data():
+    try:
+        headers = {
+            'Authorization': f'Bearer {TOKEN}'
         }
-    })
+        response = requests.get(API_URL, headers=headers)
+        response.raise_for_status()
+        return jsonify(response.json())
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
+# ✅ Run Flask với host và port phù hợp Render
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
     app.run(debug=False, host='0.0.0.0', port=port)
