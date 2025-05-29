@@ -1,8 +1,12 @@
-# proxy.py
+import json #L1
+from flask import request
+
 from flask import Flask, jsonify, send_from_directory
 from flask_cors import CORS
 import requests
 import os
+
+DATA_FILE = 'aqi_history.json' #L1
 
 app = Flask(__name__, static_folder='.', static_url_path='')
 CORS(app)  # Cho phép CORS
@@ -29,4 +33,39 @@ def get_data():
 if __name__ == '__main__':
     app.run(debug=False, host='0.0.0.0', port=5500)
 
-# proxy.py
+@app.route('/api/log', methods=['POST'])  #L1
+def log_data():
+    try:
+        new_data = request.json
+        if not new_data:
+            return jsonify({"error": "No data received"}), 400
+
+        # Đọc dữ liệu cũ
+        if os.path.exists(DATA_FILE):
+            with open(DATA_FILE, 'r') as f:
+                data = json.load(f)
+        else:
+            data = []
+
+        data.append(new_data)
+
+        # Ghi lại
+        with open(DATA_FILE, 'w') as f:
+            json.dump(data, f)
+
+        return jsonify({"message": "Logged successfully"}), 200
+    except Exception as e: 
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/log', methods=['GET']) #L1
+def get_logged_data():
+    try:
+        if os.path.exists(DATA_FILE):
+            with open(DATA_FILE, 'r') as f:
+                data = json.load(f)
+        else:
+            data = []
+
+        return jsonify(data), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
