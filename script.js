@@ -1,4 +1,4 @@
-var map, marker, aqiCircle, visitedLocations = {};
+var map, marker;
 
 function initMap() {
     if (map) {
@@ -10,93 +10,148 @@ function initMap() {
     }).addTo(map);
 }
 
-function calculateAQI(conc, breakpoints) {
-    for (let i = 0; i < breakpoints.length - 1; i++) {
-        const C_low = breakpoints[i].C_low;
-        const C_high = breakpoints[i + 1].C_low;
-        const I_low = breakpoints[i].I_low;
-        const I_high = breakpoints[i + 1].I_low;
-        if (conc >= C_low && conc <= C_high) {
-            return Math.round(((conc - C_low) / (C_high - C_low)) * (I_high - I_low) + I_low);
+const VN_AQI_BREAKPOINTS = {
+    pm25: [
+        { Cp_lo: 0, Cp_hi: 30, I_lo: 0, I_hi: 50 },
+        { Cp_lo: 31, Cp_hi: 60, I_lo: 51, I_hi: 100 },
+        { Cp_lo: 61, Cp_hi: 90, I_lo: 101, I_hi: 150 },
+        { Cp_lo: 91, Cp_hi: 120, I_lo: 151, I_hi: 200 },
+        { Cp_lo: 121, Cp_hi: 250, I_lo: 201, I_hi: 300 },
+        { Cp_lo: 251, Cp_hi: 500, I_lo: 301, I_hi: 500 },
+    ],
+    pm10: [
+        { Cp_lo: 0, Cp_hi: 50, I_lo: 0, I_hi: 50 },
+        { Cp_lo: 51, Cp_hi: 100, I_lo: 51, I_hi: 100 },
+        { Cp_lo: 101, Cp_hi: 250, I_lo: 101, I_hi: 150 },
+        { Cp_lo: 251, Cp_hi: 350, I_lo: 151, I_hi: 200 },
+        { Cp_lo: 351, Cp_hi: 430, I_lo: 201, I_hi: 300 },
+        { Cp_lo: 431, Cp_hi: 600, I_lo: 301, I_hi: 500 },
+    ],
+    co: [
+        { Cp_lo: 0, Cp_hi: 5, I_lo: 0, I_hi: 50 },
+        { Cp_lo: 6, Cp_hi: 10, I_lo: 51, I_hi: 100 },
+        { Cp_lo: 11, Cp_hi: 17, I_lo: 101, I_hi: 150 },
+        { Cp_lo: 18, Cp_hi: 34, I_lo: 151, I_hi: 200 },
+        { Cp_lo: 35, Cp_hi: 46, I_lo: 201, I_hi: 300 },
+        { Cp_lo: 47, Cp_hi: 60, I_lo: 301, I_hi: 500 },
+    ],
+    so2: [
+        { Cp_lo: 0, Cp_hi: 50, I_lo: 0, I_hi: 50 },
+        { Cp_lo: 51, Cp_hi: 100, I_lo: 51, I_hi: 100 },
+        { Cp_lo: 101, Cp_hi: 199, I_lo: 101, I_hi: 150 },
+        { Cp_lo: 200, Cp_hi: 349, I_lo: 151, I_hi: 200 },
+        { Cp_lo: 350, Cp_hi: 439, I_lo: 201, I_hi: 300 },
+        { Cp_lo: 440, Cp_hi: 600, I_lo: 301, I_hi: 500 },
+    ],
+    no2: [
+        { Cp_lo: 0, Cp_hi: 100, I_lo: 0, I_hi: 50 },
+        { Cp_lo: 101, Cp_hi: 200, I_lo: 51, I_hi: 100 },
+        { Cp_lo: 201, Cp_hi: 300, I_lo: 101, I_hi: 150 },
+        { Cp_lo: 301, Cp_hi: 400, I_lo: 151, I_hi: 200 },
+        { Cp_lo: 401, Cp_hi: 500, I_lo: 201, I_hi: 300 },
+        { Cp_lo: 501, Cp_hi: 600, I_lo: 301, I_hi: 500 },
+    ]
+};
+
+function calculateIndividualAQI(value, pollutant) {
+    const breakpoints = VN_AQI_BREAKPOINTS[pollutant];
+    for (const bp of breakpoints) {
+        if (value >= bp.Cp_lo && value <= bp.Cp_hi) {
+            const { Cp_lo, Cp_hi, I_lo, I_hi } = bp;
+            const AQI = ((I_hi - I_lo) / (Cp_hi - Cp_lo)) * (value - Cp_lo) + I_lo;
+            return Math.round(AQI);
         }
     }
-    return breakpoints[breakpoints.length - 1].I_low;
+    return -1; 
 }
 
-function calculateVNAQI(pm25, pm10, no2, so2, co) {
-    const pm25Breakpoints = [
-        { C_low: 0, I_low: 0 }, { C_low: 12.1, I_low: 51 }, { C_low: 35.5, I_low: 101 },
-        { C_low: 55.5, I_low: 151 }, { C_low: 150.5, I_low: 201 }, { C_low: 250.5, I_low: 301 }
-    ];
-    const pm10Breakpoints = [
-        { C_low: 0, I_low: 0 }, { C_low: 50.1, I_low: 51 }, { C_low: 150.1, I_low: 101 },
-        { C_low: 250.1, I_low: 151 }, { C_low: 350.1, I_low: 201 }, { C_low: 420.1, I_low: 301 }
-    ];
-    const no2Breakpoints = [
-        { C_low: 0, I_low: 0 }, { C_low: 0.054, I_low: 51 }, { C_low: 0.101, I_low: 101 },
-        { C_low: 0.361, I_low: 151 }, { C_low: 0.651, I_low: 201 }, { C_low: 1.241, I_low: 301 }
-    ];
-    const so2Breakpoints = [
-        { C_low: 0, I_low: 0 }, { C_low: 0.036, I_low: 51 }, { C_low: 0.076, I_low: 101 },
-        { C_low: 0.186, I_low: 151 }, { C_low: 0.305, I_low: 201 }, { C_low: 0.605, I_low: 301 }
-    ];
-    const coBreakpoints = [
-        { C_low: 0, I_low: 0 }, { C_low: 4.5, I_low: 51 }, { C_low: 9.5, I_low: 101 },
-        { C_low: 12.5, I_low: 151 }, { C_low: 15.5, I_low: 201 }, { C_low: 30.5, I_low: 301 }
-    ];
+function calculateAQIFromSensors(obj) {
+    const aqiValues = {
+        pm25: calculateIndividualAQI(obj.pm25, "pm25"),
+        pm10: calculateIndividualAQI(obj.pm10, "pm10"),
+        co: calculateIndividualAQI(obj.co, "co"),
+        so2: calculateIndividualAQI(obj.so2, "so2"),
+        no2: calculateIndividualAQI(obj.no2, "no2"),
+    };
 
-    const aqiPM25 = calculateAQI(pm25, pm25Breakpoints);
-    const aqiPM10 = calculateAQI(pm10, pm10Breakpoints);
-    const aqiNO2 = calculateAQI(no2, no2Breakpoints);
-    const aqiSO2 = calculateAQI(so2, so2Breakpoints);
-    const aqiCO = calculateAQI(co, coBreakpoints);
+    const maxAQI = Math.max(...Object.values(aqiValues));
+    const level = getAQILevel(maxAQI);
 
-    return Math.max(aqiPM25, aqiPM10, aqiNO2, aqiSO2, aqiCO);
+    return { aqi: maxAQI, level };
 }
 
-function getAQIColor(aqi) {
-    if (aqi <= 50) return '#00e400'; // Tốt
-    if (aqi <= 100) return '#ffff00'; // Trung bình
-    if (aqi <= 150) return '#ff7e00'; // Kém
-    if (aqi <= 200) return '#ff0000'; // Xấu
-    if (aqi <= 300) return '#99004c'; // Rất xấu
-    return '#7e0023'; // Nguy hại app.run(debug=True, host='0.0.0.0', port=5000)
+function getAQILevel(aqi) {
+    if (aqi <= 50) return "good";
+    if (aqi <= 100) return "moderate";
+    if (aqi <= 150) return "unhealthy-for-sensitive";
+    if (aqi <= 200) return "unhealthy";
+    if (aqi <= 300) return "very-unhealthy";
+    return "hazardous";
 }
 
-function createAQIIcon(aqi) {
-    const color = getAQIColor(aqi);
-    return L.divIcon({
-        className: 'aqi-marker',
-        html: `<div class="aqi-sign" style="background-color: ${color}"><span>AQI: ${aqi}</span></div><div class="aqi-pole"></div>`,
-        iconSize: [60, 80],
-        iconAnchor: [30, 80]
-    });
+function getAQIColor(level) {
+    switch (level) {
+        case 'good': return '#00e400';
+        case 'moderate': return '#ffff00';
+        case 'unhealthy-for-sensitive': return '#ff7e00';
+        case 'unhealthy': return '#ff0000';
+        case 'very-unhealthy': return '#99004c';
+        case 'hazardous': return '#7e0023';
+        default: return '#000000';
+    }
 }
+
+let aqiCircles = []; 
 
 function fetchData() {
     fetch('https://datnw.onrender.com/api/data')
         .then(res => res.json())
         .then(data => {
             const latest = data[data.length - 1];
-            //const latest = data[0];
             const obj = latest.object;
             if (!obj) throw new Error("Không tìm thấy object");
 
             const lat = obj.latitude;
             const lng = obj.longitude;
-            const locationKey = `${lat.toFixed(4)},${lng.toFixed(4)}`; // Sử dụng 4 chữ số thập phân để tăng độ chính xác
 
-            const pm25 = obj.pm25;
-            const pm10 = obj.pm10;
-            const no2 = obj.no2;
-            const so2 = obj.so2;
-            const co = obj.co;
-            const vnAQI = calculateVNAQI(pm25, pm10, no2, so2, co);
+            if (!marker) {
+                map.setView([lat, lng], 15); 
+            }
+
+
+            if (marker) {
+                marker.setLatLng([lat, lng]);
+            } else {
+                marker = L.marker([lat, lng]).addTo(map).bindPopup("Trạm quan trắc");
+            }
+
+            const aqiData = calculateAQIFromSensors(obj);
+            const aqiColor = getAQIColor(aqiData.level);
+
+            const thresholdMeters = 5;
+            for (let i = 0; i < aqiCircles.length; i++) {
+                const circle = aqiCircles[i];
+                const distance = map.distance(circle.getLatLng(), L.latLng(lat, lng));
+                if (distance < thresholdMeters) {
+                    map.removeLayer(circle);
+                    aqiCircles.splice(i, 1);
+                    break;
+                }
+            }
+
+            const newCircle = L.circle([lat, lng], {
+                color: aqiColor,
+                fillColor: aqiColor,
+                fillOpacity: 0.6,
+                radius: 10
+            }).addTo(map).bindPopup(`AQI: ${aqiData.aqi} (${aqiData.level})`);
+
+            aqiCircles.push(newCircle);
 
             document.getElementById("temperature").textContent = obj.temperature.toFixed(1) + " °C";
             document.getElementById("humidity").textContent = obj.humidity.toFixed(1) + " %";
-            document.getElementById("no2").textContent = obj.no2 + " ppm";
-            document.getElementById("so2").textContent = obj.so2 + " ppm";
+            document.getElementById("no2").textContent = obj.no2 + " µg/m³";
+            document.getElementById("so2").textContent = obj.so2 + " µg/m³";
             document.getElementById("pm10").textContent = obj.pm10 + " µg/m³";
             document.getElementById("pm25").textContent = obj.pm25 + " µg/m³";
             document.getElementById("co").textContent = obj.co + " µg/m³";
@@ -104,52 +159,23 @@ function fetchData() {
 
             const aqiIndicator = document.getElementById("aqiIndicator");
             const aqiWidth = document.querySelector(".aqi-bar").offsetWidth;
-            const position = (vnAQI / 500) * aqiWidth;
+            const position = (aqiData.aqi / 500) * aqiWidth;
             aqiIndicator.style.left = `${position}px`;
-            aqiIndicator.dataset.level = vnAQI <= 50 ? 'good' : vnAQI <= 100 ? 'moderate' : vnAQI <= 150 ? 'unhealthy-for-sensitive' : vnAQI <= 200 ? 'unhealthy' : vnAQI <= 300 ? 'very-unhealthy' : 'hazardous';
-
-            // Cập nhật marker và vòng tròn
-            if (visitedLocations[locationKey]) {
-                // Nếu vị trí đã được ghi nhận, cập nhật marker và vòng tròn
-                if (marker) {
-                    marker.setLatLng([lat, lng]);
-                    marker.setIcon(createAQIIcon(vnAQI));
-                }
-                if (aqiCircle) {
-                    aqiCircle.setStyle({ fillColor: getAQIColor(vnAQI), fillOpacity: 0.5 });
-                    aqiCircle.setLatLng([lat, lng]);
-                }
-                visitedLocations[locationKey].aqi = vnAQI;
-            } else {
-                // Nếu vị trí mới, tạo marker và vòng tròn mới
-                if (marker) map.removeLayer(marker);
-                if (aqiCircle) map.removeLayer(aqiCircle);
-
-                marker = L.marker([lat, lng], { icon: createAQIIcon(vnAQI) }).addTo(map);
-                aqiCircle = L.circle([lat, lng], {
-                    color: 'transparent',
-                    fillColor: getAQIColor(vnAQI),
-                    fillOpacity: 0.5,
-                    radius: 500
-                }).addTo(map);
-
-                visitedLocations[locationKey] = { aqi: vnAQI, timestamp: Date.now() };
-            }
-
-            map.setView([lat, lng], 15);
+            aqiIndicator.dataset.level = aqiData.level;
         })
         .catch(error => {
             console.error("Lỗi khi lấy dữ liệu:", error);
         });
 }
 
+
+
 function zoomToDistrict(coords) {
     if (map) {
-        map.setView(coords, 14); // Zoom level 14 để hiển thị chi tiết quận
+        map.setView(coords, 14); 
     }
 }
 
-// Hàm mở tab
 function openTab(evt, tabName) {
     var i, tabcontent, tablinks;
     tabcontent = document.getElementsByClassName("tabcontent");
@@ -171,7 +197,28 @@ function openTab(evt, tabName) {
         }
         fetchData();
     }
+
+    if (tabName === 'Weather') {
+        fetchWeather();
+    }
 }
+
+
+function getWeatherIcon(iconCode) {
+    const iconMap = {
+        '01d': 'fa-sun', '01n': 'fa-moon',
+        '02d': 'fa-cloud-sun', '02n': 'fa-cloud-moon',
+        '03d': 'fa-cloud', '03n': 'fa-cloud',
+        '04d': 'fa-cloud', '04n': 'fa-cloud',
+        '09d': 'fa-cloud-rain', '09n': 'fa-cloud-rain',
+        '10d': 'fa-cloud-sun-rain', '10n': 'fa-cloud-moon-rain',
+        '11d': 'fa-bolt', '11n': 'fa-bolt',
+        '13d': 'fa-snowflake', '13n': 'fa-snowflake',
+        '50d': 'fa-smog', '50n': 'fa-smog'
+    };
+    return iconMap[iconCode] || 'fa-cloud';
+}
+
 
 document.addEventListener('DOMContentLoaded', function() {
     document.querySelector('.tablink').click();
