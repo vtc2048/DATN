@@ -6,42 +6,11 @@
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" />
-    <style>
-        .aqi-marker {
-            position: relative;
-            text-align: center;
-        }
-        .aqi-sign {
-            width: 60px;
-            height: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: 2px solid #000;
-            border-radius: 5px;
-            font-weight: bold;
-            color: #000;
-            position: absolute;
-            top: -40px;
-            left: 50%;
-            transform: translateX(-50%);
-        }
-        .aqi-pole {
-            background-color: #fff;
-            width: 10px;
-            height: 40px;
-            position: absolute;
-            bottom: 0;
-            left: 50%;
-            transform: translateX(-50%);
-        }
-    </style>
 </head>
 <body>
     <div class="container">
         <div class="tabs">
             <button class="tablink" onclick="openTab(event, 'Home')">Trang Chủ</button>
-            <button class="tablink" onclick="openTab(event, 'Chart')">Biểu Đồ</button>
             <button class="tablink" onclick="openTab(event, 'Contact')">Liên Hệ</button>
         </div>
 
@@ -115,7 +84,7 @@
                         <button onclick="zoomToDistrict([16.100, 108.250])">Sơn Trà</button>
                         <button onclick="zoomToDistrict([16.030, 108.250])">Ngũ Hành Sơn</button>
                         <button onclick="zoomToDistrict([16.050, 108.170])">Cẩm Lệ</button>
-                        <button onclick="zoomToDistrict([16.100, 108.170])">Liên Chiểu</button>
+                        <button onclick="zoomToDistrict([16.078, 108.133])">Liên Chiểu</button>
                         <button onclick="zoomToDistrict([16.000, 108.100])">Hòa Vang</button>
                         <button onclick="zoomToDistrict([16.500, 111.500])">Hoàng Sa</button>
                     </div>
@@ -133,10 +102,11 @@
             </div>
         </div>
 
-        <div id="Chart" class="tabcontent" style="display:none;">
-            <h2>Biểu Đồ Thông Số Cảm Biến</h2>
-            <canvas id="sensorChart"></canvas>
-        </div>
+        <div id="Weather" class="tabcontent" style="display:none;">
+            <video autoplay muted loop class="background-video">
+                <source src="video/ghostblade11.mp4" type="video/mp4">
+                Your browser does not support the video tag.
+            </video>
 
         <div id="Contact" class="tabcontent" style="display:none;">
             <div class="contact-container">
@@ -162,4 +132,6 @@
     <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script src="script.js"></script>
-    <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'93d111a39be3b05b',t:'MTc0Njc5MjM2Ni4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'94749e8c6d47e8bd',t:'MTc0ODUwNzMxNy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
+    <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'93d111a39be3b05b',t:'MTc0Njc5MjM2Ni4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
+</body>
+</html>
