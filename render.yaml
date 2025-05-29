@@ -3,8 +3,5 @@ services:
     name: datn-web
     env: python
     plan: free
-    buildCommand: "pip install -r requirements.txt"
-    startCommand: "gunicorn -w 4 -k uvicorn.workers.UvicornWorker proxy:app"
-    envVars:
-      - key: API_TOKEN
-        value: 43497e17-9d24-4b08-97f1-4a08366bb9f1
+    buildCommand: ""
+    startCommand: python proxy.py
