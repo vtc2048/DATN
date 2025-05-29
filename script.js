@@ -81,26 +81,25 @@ function fetchData() {
                 marker.setLatLng([lat, lng]);
             }
 
-            // Xoá vòng tròn trùng vị trí
-            const thresholdMeters = 5;
+            // Xoá vòng tròn cũ nếu trùng vị trí
             for (let i = 0; i < aqiCircles.length; i++) {
-                const c = aqiCircles[i];
-                if (map.distance(c.getLatLng(), L.latLng(lat, lng)) < thresholdMeters) {
-                    map.removeLayer(c);
+                if (map.distance(aqiCircles[i].getLatLng(), L.latLng(lat, lng)) < 5) {
+                    map.removeLayer(aqiCircles[i]);
                     aqiCircles.splice(i, 1);
                     break;
                 }
             }
 
+            // Vẽ vòng tròn mới
             const circle = L.circle([lat, lng], {
                 color: aqiColor,
                 fillColor: aqiColor,
                 fillOpacity: 0.6,
-                radius: 10
+                radius: 50
             }).addTo(map).bindPopup(`AQI: ${aqiData.aqi} (${aqiData.level})`);
             aqiCircles.push(circle);
 
-            // Gửi về server
+            // Gửi về server để lưu
             fetch('/api/log', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -111,7 +110,7 @@ function fetchData() {
                 })
             });
 
-            // Hiển thị thông số
+            // Hiển thị dữ liệu cảm biến
             document.getElementById("temperature").textContent = obj.temperature.toFixed(1) + " °C";
             document.getElementById("humidity").textContent = obj.humidity.toFixed(1) + " %";
             document.getElementById("no2").textContent = obj.no2 + " µg/m³";
@@ -121,6 +120,7 @@ function fetchData() {
             document.getElementById("co").textContent = obj.co + " µg/m³";
             document.getElementById("uv").textContent = obj.uv + "";
 
+            // Thanh chỉ báo AQI
             const aqiIndicator = document.getElementById("aqiIndicator");
             const aqiWidth = document.querySelector(".aqi-bar").offsetWidth;
             const position = (aqiData.aqi / 500) * aqiWidth;
@@ -137,12 +137,24 @@ function loadSavedAQI() {
         .then(res => res.json())
         .then(data => {
             data.forEach(item => {
+                const latlng = L.latLng(item.lat, item.lng);
+
+                // Xoá vòng tròn cũ nếu trùng vị trí
+                for (let i = 0; i < aqiCircles.length; i++) {
+                    if (map.distance(aqiCircles[i].getLatLng(), latlng) < 5) {
+                        map.removeLayer(aqiCircles[i]);
+                        aqiCircles.splice(i, 1);
+                        break;
+                    }
+                }
+
+                // Vẽ vòng tròn mới
                 const color = getAQIColor(item.level);
-                const circle = L.circle([item.lat, item.lng], {
+                const circle = L.circle(latlng, {
                     color,
                     fillColor: color,
                     fillOpacity: 0.6,
-                    radius: 10
+                    radius: 50
                 }).addTo(map).bindPopup(`AQI: ${item.aqi} (${item.level})`);
                 aqiCircles.push(circle);
             });
