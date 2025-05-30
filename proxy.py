@@ -1,14 +1,15 @@
-# proxy.py
-from flask import Flask, jsonify, send_from_directory
+from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
 import requests
 import os
+import json
 
 app = Flask(__name__, static_folder='.', static_url_path='')
 CORS(app)  # Cho phép CORS
 
 API_URL = 'http://vngalaxy.vn:5000/get_data'
 TOKEN = '43497e17-9d24-4b08-97f1-4a08366bb9f9'
+#DATA_FILE = 'aqi_history.json'
 
 @app.route('/')
 def serve_index():
