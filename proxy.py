@@ -9,6 +9,7 @@ CORS(app)  # Cho phép CORS
 
 API_URL = 'http://vngalaxy.vn:5000/get_data'
 TOKEN = '43497e17-9d24-4b08-97f1-4a08366bb9f9'
+#DATA_FILE = 'aqi_history.json'
 
 @app.route('/')
 def serve_index():
