@@ -104,7 +104,7 @@ function getAQIColor(level) {
 let aqiCircles = []; 
 
 function fetchData() {
-    fetch('http://localhost:5001/api/data')
+    fetch('http://hethongquantrac/api/data')
         .then(res => res.json())
         .then(data => {
             const latest = data[data.length - 1];
