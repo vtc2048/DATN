@@ -95,7 +95,7 @@ function fetchData() {
                 stroke: false,
                 fillColor: aqiColor,
                 fillOpacity: 0.6,
-                radius: 220
+                radius: 20
             }).addTo(map).bindPopup(`AQI: ${aqiData.aqi} (${aqiData.level})`);
             aqiCircles.push(circle);
 
