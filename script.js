@@ -1,10 +1,10 @@
-var map, marker;
+var map, marker, aqiCircles = [];
 
 function initMap() {
     if (map) {
-        map.remove(); 
+        map.remove();
     }
-    map = L.map('map').setView([16.05, 108.2], 13); 
+    map = L.map('map').setView([16.05, 108.2], 13);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© OpenStreetMap contributors'
     }).addTo(map);
@@ -62,7 +62,7 @@ function calculateIndividualAQI(value, pollutant) {
             return Math.round(AQI);
         }
     }
-    return -1; 
+    return -1;
 }
 
 function calculateAQIFromSensors(obj) {
@@ -101,7 +101,29 @@ function getAQIColor(level) {
     }
 }
 
-let aqiCircles = []; 
+function loadCircles() {
+    fetch('https://hethongquantrac.onrender.com/api/circles')
+        .then(res => res.json())
+        .then(circles => {
+            aqiCircles = [];
+            circles.forEach(circle => {
+                const lat = circle.latitude;
+                const lng = circle.longitude;
+                const aqiColor = getAQIColor(circle.level);
+                const newCircle = L.circle([lat, lng], {
+                    color: aqiColor,
+                    fillColor: aqiColor,
+                    fillOpacity: 0.6,
+                    radius: 10
+                }).addTo(map).bindPopup(`AQI: ${circle.aqi} (${circle.level})<br>PM2.5: ${circle.pm25} µg/m³`);
+                aqiCircles.push(newCircle);
+            });
+            console.log("Loaded circles:", aqiCircles.length);
+        })
+        .catch(error => {
+            console.error("Error loading circles:", error);
+        });
+}
 
 function fetchData() {
     fetch('https://hethongquantrac.onrender.com/api/data')
@@ -115,9 +137,8 @@ function fetchData() {
             const lng = obj.longitude;
 
             if (!marker) {
-                map.setView([lat, lng], 15); 
+                map.setView([lat, lng], 15);
             }
-
 
             if (marker) {
                 marker.setLatLng([lat, lng]);
@@ -144,7 +165,7 @@ function fetchData() {
                 fillColor: aqiColor,
                 fillOpacity: 0.6,
                 radius: 10
-            }).addTo(map).bindPopup(`AQI: ${aqiData.aqi} (${aqiData.level})`);
+            }).addTo(map).bindPopup(`AQI: ${aqiData.aqi} (${aqiData.level})<br>PM2.5: ${obj.pm25} µg/m³`);
 
             aqiCircles.push(newCircle);
 
@@ -168,11 +189,9 @@ function fetchData() {
         });
 }
 
-
-
 function zoomToDistrict(coords) {
     if (map) {
-        map.setView(coords, 14); 
+        map.setView(coords, 14);
     }
 }
 
@@ -180,45 +199,25 @@ function openTab(evt, tabName) {
     var i, tabcontent, tablinks;
     tabcontent = document.getElementsByClassName("tabcontent");
     for (i = 0; i < tabcontent.length; i++) {
-        tabcontent[i].style.display = "none";  
+        tabcontent[i].style.display = "none";
     }
     tablinks = document.getElementsByClassName("tablink");
     for (i = 0; i < tablinks.length; i++) {
         tablinks[i].className = tablinks[i].className.replace(" active", "");
     }
-    document.getElementById(tabName).style.display = "block";  
+    document.getElementById(tabName).style.display = "block";
     evt.currentTarget.className += " active";
 
     if (tabName === 'Home') {
         if (!map) {
             initMap();
         } else {
-            map.invalidateSize(); 
+            map.invalidateSize();
         }
+        loadCircles();
         fetchData();
     }
-
-    if (tabName === 'Weather') {
-        fetchWeather();
-    }
 }
-
-
-function getWeatherIcon(iconCode) {
-    const iconMap = {
-        '01d': 'fa-sun', '01n': 'fa-moon',
-        '02d': 'fa-cloud-sun', '02n': 'fa-cloud-moon',
-        '03d': 'fa-cloud', '03n': 'fa-cloud',
-        '04d': 'fa-cloud', '04n': 'fa-cloud',
-        '09d': 'fa-cloud-rain', '09n': 'fa-cloud-rain',
-        '10d': 'fa-cloud-sun-rain', '10n': 'fa-cloud-moon-rain',
-        '11d': 'fa-bolt', '11n': 'fa-bolt',
-        '13d': 'fa-snowflake', '13n': 'fa-snowflake',
-        '50d': 'fa-smog', '50n': 'fa-smog'
-    };
-    return iconMap[iconCode] || 'fa-cloud';
-}
-
 
 document.addEventListener('DOMContentLoaded', function() {
     document.querySelector('.tablink').click();
