@@ -61,7 +61,7 @@ function calculateAQIFromSensors(obj) {
 }
 
 function fetchData() {
-    fetch('https://hethongquantrac.onrender.com//api/data')
+    fetch('https://hethongquantrac.onrender.com/api/data')  // Đã sửa URL, bỏ dấu //
         .then(res => res.json())
         .then(data => {
             const latest = data[data.length - 1];
@@ -100,7 +100,7 @@ function fetchData() {
             aqiCircles.push(circle);
 
             // Gửi về server để lưu
-            fetch('/api/log', {
+            fetch('https://hethongquantrac.onrender.com/api/log', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -133,7 +133,7 @@ function fetchData() {
 }
 
 function loadSavedAQI() {
-    fetch('/api/log')
+    fetch('https://hethongquantrac.onrender.com/api/log')
         .then(res => res.json())
         .then(data => {
             data.forEach(item => {
