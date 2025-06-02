@@ -72,45 +72,22 @@ function getAQIColor(level) {
 
 function loadSavedAQI() {
     fetch('/api/log')
-        .then(res => {
-            if (!res.ok) throw new Error('Failed to fetch AQI data');
-            return res.json();
-        })
+        .then(res => res.json())
         .then(data => {
-            if (!Array.isArray(data)) {
-                console.warn("AQI data is not an array, skipping rendering");
-                return;
-            }
-            if (data.length === 0) {
-                console.log("No AQI data found in database");
-                return;
-            }
-
-            // Đảo ngược dữ liệu để duyệt từ cũ đến mới
-            data = [...data].reverse();
-
-            // Lọc các điểm không trùng lặp, giữ điểm mới nhất tại mỗi vị trí
+            // Lọc trùng lặp trong dữ liệu trước khi vẽ
             const uniqueData = [];
-            for (let i = 0; i < data.length; i++) {
-                const current = data[i];
-                const latlng = L.latLng(current.lat, current.lng);
-                let isDuplicate = false;
-
-                // So sánh với các điểm mới hơn (đã được giữ lại)
-                for (let j = 0; j < uniqueData.length; j++) {
-                    const existing = uniqueData[j];
-                    const dist = map.distance(latlng, L.latLng(existing.lat, existing.lng));
-                    if (dist < 10) { // Ngưỡng 10 mét
-                        isDuplicate = true;
-                        break;
-                    }
+            data.forEach(entry => {
+                const isNear = uniqueData.some(e => {
+                    const dist = map.distance(L.latLng(e.lat, e.lng), L.latLng(entry.lat, entry.lng));
+                    return dist < 10;
+                }) || aqiCircles.some(circle => {
+                    const dist = map.distance(circle.getLatLng(), L.latLng(entry.lat, entry.lng));
+                    return dist < 10;
+                });
+                if (!isNear) {
+                    uniqueData.push(entry);
                 }
-
-                // Nếu không trùng, thêm vào danh sách unique
-                if (!isDuplicate) {
-                    uniqueData.unshift(current); // Thêm vào đầu để giữ thứ tự mới nhất trước
-                }
-            }
+            });
 
             // Vẽ các vòng tròn không trùng lặp
             uniqueData.forEach(item => {
@@ -119,7 +96,7 @@ function loadSavedAQI() {
                     stroke: false,
                     fillColor: color,
                     fillOpacity: 0.6,
-                    radius: 10
+                    radius: 30
                 }).addTo(map).bindPopup(`AQI: ${item.aqi} (${item.level})`);
                 aqiCircles.push(circle);
             });
@@ -129,10 +106,7 @@ function loadSavedAQI() {
 
 function fetchData() {
     fetch('/api/data')
-        .then(res => {
-            if (!res.ok) throw new Error('Failed to fetch data');
-            return res.json();
-        })
+        .then(res => res.json())
         .then(data => {
             const latest = data[data.length - 1];
             const obj = latest.object;
@@ -155,7 +129,7 @@ function fetchData() {
                     stroke: false,
                     fillColor: aqiColor,
                     fillOpacity: 0.6,
-                    radius: 10
+                    radius: 30
                 }).addTo(map).bindPopup(`AQI: ${aqiData.aqi} (${aqiData.level})`);
                 aqiCircles.push(circle);
             }
@@ -166,19 +140,12 @@ function fetchData() {
                 level: aqiData.level
             };
 
-            return fetch('/api/log', {
+            fetch('/api/log', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(dataToSave)
-            }).then(res => {
-                if (!res.ok) throw new Error('Failed to log data');
-                return res.json();
             });
-        })
-        .then(() => {
-            // Cập nhật các giá trị cảm biến
-            const latest = data[data.length - 1];
-            const obj = latest.object;
+
             document.getElementById("temperature").textContent = obj.temperature.toFixed(1) + " °C";
             document.getElementById("humidity").textContent = obj.humidity.toFixed(1) + " %";
             document.getElementById("no2").textContent = obj.no2 + " µg/m³";
