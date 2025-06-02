@@ -72,10 +72,22 @@ function getAQIColor(level) {
 
 function loadSavedAQI() {
     fetch('/api/log')
-        .then(res => res.json())
+        .then(res => {
+            if (!res.ok) throw new Error('Failed to fetch AQI data');
+            return res.json();
+        })
         .then(data => {
+            if (!Array.isArray(data)) {
+                console.warn("AQI data is not an array, skipping rendering");
+                return;
+            }
+            if (data.length === 0) {
+                console.log("No AQI data found in database");
+                return;
+            }
+
             // Đảo ngược dữ liệu để duyệt từ cũ đến mới
-            data = data.reverse();
+            data = [...data].reverse();
 
             // Lọc các điểm không trùng lặp, giữ điểm mới nhất tại mỗi vị trí
             const uniqueData = [];
@@ -117,7 +129,10 @@ function loadSavedAQI() {
 
 function fetchData() {
     fetch('/api/data')
-        .then(res => res.json())
+        .then(res => {
+            if (!res.ok) throw new Error('Failed to fetch data');
+            return res.json();
+        })
         .then(data => {
             const latest = data[data.length - 1];
             const obj = latest.object;
@@ -151,12 +166,19 @@ function fetchData() {
                 level: aqiData.level
             };
 
-            fetch('/api/log', {
+            return fetch('/api/log', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(dataToSave)
+            }).then(res => {
+                if (!res.ok) throw new Error('Failed to log data');
+                return res.json();
             });
-
+        })
+        .then(() => {
+            // Cập nhật các giá trị cảm biến
+            const latest = data[data.length - 1];
+            const obj = latest.object;
             document.getElementById("temperature").textContent = obj.temperature.toFixed(1) + " °C";
             document.getElementById("humidity").textContent = obj.humidity.toFixed(1) + " %";
             document.getElementById("no2").textContent = obj.no2 + " µg/m³";
