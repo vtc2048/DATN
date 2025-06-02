@@ -74,20 +74,31 @@ function loadSavedAQI() {
     fetch('/api/log')
         .then(res => res.json())
         .then(data => {
-            // Lọc trùng lặp trong dữ liệu trước khi vẽ
+            // Đảo ngược dữ liệu để duyệt từ cũ đến mới
+            data = data.reverse();
+
+            // Lọc các điểm không trùng lặp, giữ điểm mới nhất tại mỗi vị trí
             const uniqueData = [];
-            data.forEach(entry => {
-                const isNear = uniqueData.some(e => {
-                    const dist = map.distance(L.latLng(e.lat, e.lng), L.latLng(entry.lat, entry.lng));
-                    return dist < 10;
-                }) || aqiCircles.some(circle => {
-                    const dist = map.distance(circle.getLatLng(), L.latLng(entry.lat, entry.lng));
-                    return dist < 10;
-                });
-                if (!isNear) {
-                    uniqueData.push(entry);
+            for (let i = 0; i < data.length; i++) {
+                const current = data[i];
+                const latlng = L.latLng(current.lat, current.lng);
+                let isDuplicate = false;
+
+                // So sánh với các điểm mới hơn (đã được giữ lại)
+                for (let j = 0; j < uniqueData.length; j++) {
+                    const existing = uniqueData[j];
+                    const dist = map.distance(latlng, L.latLng(existing.lat, existing.lng));
+                    if (dist < 10) { // Ngưỡng 10 mét
+                        isDuplicate = true;
+                        break;
+                    }
                 }
-            });
+
+                // Nếu không trùng, thêm vào danh sách unique
+                if (!isDuplicate) {
+                    uniqueData.unshift(current); // Thêm vào đầu để giữ thứ tự mới nhất trước
+                }
+            }
 
             // Vẽ các vòng tròn không trùng lặp
             uniqueData.forEach(item => {
