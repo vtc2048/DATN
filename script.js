@@ -78,29 +78,25 @@ function saveToLocalStorage(data) {
     localStorage.setItem('aqiData', JSON.stringify(list));
 }
 
+// ✅ Load dữ liệu từ localStorage (hoặc server nếu muốn), loại bỏ điểm trùng
 function loadSavedAQI() {
-    const data = JSON.parse(localStorage.getItem('aqiData') || '[]');
+    const raw = JSON.parse(localStorage.getItem('aqiData') || '[]');
+    const unique = [];
 
-    // Lọc trùng để không thêm các vòng tròn lặp lại
-    const filtered = [];
-    data.forEach(item => {
-        const isNear = filtered.some(f =>
-            map.distance(L.latLng(f.lat, f.lng), L.latLng(item.lat, item.lng)) < 5
+    raw.forEach(entry => {
+        const exists = unique.some(e =>
+            Math.abs(e.lat - entry.lat) < 0.00005 && Math.abs(e.lng - entry.lng) < 0.00005
         );
-        if (!isNear) {
-            filtered.push(item);
-        }
+        if (!exists) unique.push(entry);
     });
 
-    // Vẽ vòng tròn
-    filtered.forEach(item => {
-        removeDuplicateCircle(item.lat, item.lng);
+    unique.forEach(item => {
         const color = getAQIColor(item.level);
         const circle = L.circle([item.lat, item.lng], {
             stroke: false,
             fillColor: color,
             fillOpacity: 0.6,
-            radius: 50
+            radius: 10
         }).addTo(map).bindPopup(`AQI: ${item.aqi} (${item.level})`);
         aqiCircles.push(circle);
     });
@@ -132,7 +128,7 @@ function fetchData() {
                 stroke: false,
                 fillColor: aqiColor,
                 fillOpacity: 0.6,
-                radius: 50
+                radius: 10
             }).addTo(map).bindPopup(`AQI: ${aqiData.aqi} (${aqiData.level})`);
 
             aqiCircles.push(circle);
