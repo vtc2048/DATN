@@ -119,7 +119,7 @@ function loadSavedAQI() {
                     stroke: false,
                     fillColor: color,
                     fillOpacity: 0.6,
-                    radius: 30
+                    radius: 10
                 }).addTo(map).bindPopup(`AQI: ${item.aqi} (${item.level})`);
                 aqiCircles.push(circle);
             });
@@ -155,7 +155,7 @@ function fetchData() {
                     stroke: false,
                     fillColor: aqiColor,
                     fillOpacity: 0.6,
-                    radius: 30
+                    radius: 10
                 }).addTo(map).bindPopup(`AQI: ${aqiData.aqi} (${aqiData.level})`);
                 aqiCircles.push(circle);
             }
