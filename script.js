@@ -13,8 +13,7 @@ function removeDuplicateCircle(lat, lng) {
     const thresholdMeters = 5;
     for (let i = 0; i < aqiCircles.length; i++) {
         const circle = aqiCircles[i];
-        const distance = map.distance(circle.getLatLng(), L.latLng(lat, lng));
-        if (distance < thresholdMeters) {
+        if (map.distance(circle.getLatLng(), L.latLng(lat, lng)) < thresholdMeters) {
             map.removeLayer(circle);
             aqiCircles.splice(i, 1);
             break;
@@ -157,8 +156,30 @@ function fetchData() {
         .catch(err => console.error("Lỗi lấy dữ liệu:", err));
 }
 
+// ✅ Hàm openTab cần nằm bên ngoài DOMContentLoaded để gọi từ HTML
+function openTab(evt, tabName) {
+    const tabcontent = document.getElementsByClassName("tabcontent");
+    for (let i = 0; i < tabcontent.length; i++) {
+        tabcontent[i].style.display = "none";
+    }
+
+    const tablinks = document.getElementsByClassName("tablink");
+    for (let i = 0; i < tablinks.length; i++) {
+        tablinks[i].className = tablinks[i].className.replace(" active", "");
+    }
+
+    document.getElementById(tabName).style.display = "block";
+    evt.currentTarget.className += " active";
+
+    if (tabName === 'Home') {
+        if (!map) initMap();
+        else map.invalidateSize();
+        fetchData();
+    }
+}
+
 document.addEventListener('DOMContentLoaded', function () {
-    document.querySelector('.tablink').click();
+    document.querySelector('.tablink').click(); // chọn tab đầu
     initMap();
     loadSavedAQI();
     setInterval(fetchData, 5000);
