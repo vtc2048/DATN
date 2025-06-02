@@ -7,7 +7,7 @@ import psycopg2
 app = Flask(__name__, static_folder='.', static_url_path='')
 CORS(app)  # Cho phép CORS
 
-API_URL = 'http://vngalaxy.vn:5000/get_data'
+API_URL = 'https://api.lpwanmapper.com/get_data'
 TOKEN = '43497e17-9d24-4b08-97f1-4a08366bb9f9'
 DATABASE_URL = os.getenv('DATABASE_URL', 'postgres://neondb_owner:png_Df4vdjnc8yR@p-withered-brook-a89beui-pooler.eastus2.azure.neon.tech/neondb?sslmode=require')
 conn = psycopg2.connect(DATABASE_URL)
