@@ -74,7 +74,7 @@ function getAQIColor(level) {
 
 // ✅ Lấy dữ liệu từ PostgreSQL qua API và vẽ vòng tròn không trùng
 function loadSavedAQI() {
-    fetch('/api/log')
+    fetch('https://hethongquantrac.onrender.com/api/log')
         .then(res => res.json())
         .then(data => {
             const unique = [];
