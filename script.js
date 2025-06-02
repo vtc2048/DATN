@@ -9,14 +9,16 @@ function initMap() {
     }).addTo(map);
 }
 
-function isDuplicate(lat, lng) {
-    const thresholdMeters = 10; // Ngưỡng 10 mét
-    for (let circle of aqiCircles) {
+function removeDuplicateCircle(lat, lng) {
+    const thresholdMeters = 5;
+    for (let i = 0; i < aqiCircles.length; i++) {
+        const circle = aqiCircles[i];
         if (map.distance(circle.getLatLng(), L.latLng(lat, lng)) < thresholdMeters) {
-            return true;
+            map.removeLayer(circle);
+            aqiCircles.splice(i, 1);
+            break;
         }
     }
-    return false;
 }
 
 const VN_AQI_BREAKPOINTS = {
@@ -70,33 +72,26 @@ function getAQIColor(level) {
     }
 }
 
+// ✅ Lấy dữ liệu từ PostgreSQL qua API và vẽ vòng tròn không trùng
 function loadSavedAQI() {
     fetch('/api/log')
         .then(res => res.json())
         .then(data => {
-            // Lọc trùng lặp trong dữ liệu trước khi vẽ
-            const uniqueData = [];
+            const unique = [];
             data.forEach(entry => {
-                const isNear = uniqueData.some(e => {
-                    const dist = map.distance(L.latLng(e.lat, e.lng), L.latLng(entry.lat, entry.lng));
-                    return dist < 10;
-                }) || aqiCircles.some(circle => {
-                    const dist = map.distance(circle.getLatLng(), L.latLng(entry.lat, entry.lng));
-                    return dist < 10;
-                });
-                if (!isNear) {
-                    uniqueData.push(entry);
-                }
+                const exists = unique.some(e =>
+                    Math.abs(e.lat - entry.lat) < 0.00005 && Math.abs(e.lng - entry.lng) < 0.00005
+                );
+                if (!exists) unique.push(entry);
             });
 
-            // Vẽ các vòng tròn không trùng lặp
-            uniqueData.forEach(item => {
+            unique.forEach(item => {
                 const color = getAQIColor(item.level);
                 const circle = L.circle([item.lat, item.lng], {
                     stroke: false,
                     fillColor: color,
                     fillOpacity: 0.6,
-                    radius: 30
+                    radius: 50
                 }).addTo(map).bindPopup(`AQI: ${item.aqi} (${item.level})`);
                 aqiCircles.push(circle);
             });
@@ -124,15 +119,16 @@ function fetchData() {
                 marker.setLatLng([lat, lng]);
             }
 
-            if (!isDuplicate(lat, lng)) {
-                const circle = L.circle([lat, lng], {
-                    stroke: false,
-                    fillColor: aqiColor,
-                    fillOpacity: 0.6,
-                    radius: 30
-                }).addTo(map).bindPopup(`AQI: ${aqiData.aqi} (${aqiData.level})`);
-                aqiCircles.push(circle);
-            }
+            removeDuplicateCircle(lat, lng);
+
+            const circle = L.circle([lat, lng], {
+                stroke: false,
+                fillColor: aqiColor,
+                fillOpacity: 0.6,
+                radius: 50
+            }).addTo(map).bindPopup(`AQI: ${aqiData.aqi} (${aqiData.level})`);
+
+            aqiCircles.push(circle);
 
             const dataToSave = {
                 lat, lng,
