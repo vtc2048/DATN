@@ -82,9 +82,12 @@ function fetchData() {
             }
 
             // Xoá vòng tròn cũ nếu trùng vị trí
+            const thresholdMeters = 5;
             for (let i = 0; i < aqiCircles.length; i++) {
-                if (map.distance(aqiCircles[i].getLatLng(), L.latLng(lat, lng)) < 5) {
-                    map.removeLayer(aqiCircles[i]);
+                const circle = aqiCircles[i];
+                const distance = map.distance(circle.getLatLng(), L.latLng(lat, lng));
+                if (distance < thresholdMeters) {
+                    map.removeLayer(circle);
                     aqiCircles.splice(i, 1);
                     break;
                 }
