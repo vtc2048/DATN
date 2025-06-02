@@ -91,7 +91,7 @@ function loadSavedAQI() {
                     stroke: false,
                     fillColor: color,
                     fillOpacity: 0.6,
-                    radius: 50
+                    radius: 10
                 }).addTo(map).bindPopup(`AQI: ${item.aqi} (${item.level})`);
                 aqiCircles.push(circle);
             });
