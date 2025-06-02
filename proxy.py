@@ -9,7 +9,9 @@ CORS(app)  # Cho phép CORS
 
 API_URL = 'https://api.lpwanmapper.com/get_data'
 TOKEN = '408ff5ba-2b23-40d4-b76a-64c89e02047e'
-DATABASE_URL = os.getenv('DATABASE_URL', 'postgres://neondb_owner:png_Df4vdjnc8yR@p-withered-brook-a89beui-pooler.eastus2.azure.neon.tech/neondb?sslmode=require')
+DATABASE_URL = os.getenv('DATABASE_URL')
+if not DATABASE_URL:
+    raise ValueError("DATABASE_URL environment variable not set")
 conn = psycopg2.connect(DATABASE_URL)
 
 @app.route('/')
@@ -28,9 +30,11 @@ def get_data():
         # Lấy dữ liệu từ API
         data = response.json()
         latest = data[-1] if isinstance(data, list) and data else data
-        obj = latest.get('object', {}) if isinstance(latest, dict) else {}
+        if not isinstance(latest, dict):
+            return jsonify({'error': 'Invalid data format from API'}), 500
+        obj = latest.get('object', {})
 
-        # Lưu dữ liệu vào Neon
+        # Lưu dữ liệu vào PostgreSQL Render
         if obj:
             cur = conn.cursor()
             cur.execute("""
@@ -40,8 +44,8 @@ def get_data():
             """, (
                 obj.get('latitude'),
                 obj.get('longitude'),
-                0,  # aqi sẽ được tính từ client, để 0 mặc định
-                'unknown',  # level sẽ được tính từ client, để 'unknown' mặc định
+                0,  # aqi sẽ được tính từ client
+                'unknown',  # level sẽ được tính từ client
                 obj.get('pm25'),
                 obj.get('pm10'),
                 obj.get('no2'),
@@ -55,6 +59,10 @@ def get_data():
             cur.close()
 
         return jsonify(data)
+    except requests.exceptions.RequestException as e:
+        return jsonify({'error': f'API request failed: {str(e)}'}), 500
+    except psycopg2.Error as e:
+        return jsonify({'error': f'Database error: {str(e)}'}), 500
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
@@ -80,6 +88,8 @@ def log_data():
         cur.close()
 
         return jsonify({"message": "Logged successfully"}), 200
+    except psycopg2.Error as e:
+        return jsonify({'error': f'Database error: {str(e)}'}), 500
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -93,6 +103,8 @@ def get_logged_data():
 
         data = [{"lat": row[0], "lng": row[1], "aqi": row[2], "level": row[3]} for row in rows]
         return jsonify(data), 200
+    except psycopg2.Error as e:
+        return jsonify({'error': f'Database error: {str(e)}'}), 500
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
