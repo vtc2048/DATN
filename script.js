@@ -72,34 +72,31 @@ function getAQIColor(level) {
     }
 }
 
-function saveToLocalStorage(data) {
-    let list = JSON.parse(localStorage.getItem('aqiData') || '[]');
-    list.push(data);
-    localStorage.setItem('aqiData', JSON.stringify(list));
-}
-
-// ✅ Load dữ liệu từ localStorage (hoặc server nếu muốn), loại bỏ điểm trùng
+// ✅ Lấy dữ liệu từ PostgreSQL qua API và vẽ vòng tròn không trùng
 function loadSavedAQI() {
-    const raw = JSON.parse(localStorage.getItem('aqiData') || '[]');
-    const unique = [];
+    fetch('/api/log')
+        .then(res => res.json())
+        .then(data => {
+            const unique = [];
+            data.forEach(entry => {
+                const exists = unique.some(e =>
+                    Math.abs(e.lat - entry.lat) < 0.00005 && Math.abs(e.lng - entry.lng) < 0.00005
+                );
+                if (!exists) unique.push(entry);
+            });
 
-    raw.forEach(entry => {
-        const exists = unique.some(e =>
-            Math.abs(e.lat - entry.lat) < 0.00005 && Math.abs(e.lng - entry.lng) < 0.00005
-        );
-        if (!exists) unique.push(entry);
-    });
-
-    unique.forEach(item => {
-        const color = getAQIColor(item.level);
-        const circle = L.circle([item.lat, item.lng], {
-            stroke: false,
-            fillColor: color,
-            fillOpacity: 0.6,
-            radius: 10
-        }).addTo(map).bindPopup(`AQI: ${item.aqi} (${item.level})`);
-        aqiCircles.push(circle);
-    });
+            unique.forEach(item => {
+                const color = getAQIColor(item.level);
+                const circle = L.circle([item.lat, item.lng], {
+                    stroke: false,
+                    fillColor: color,
+                    fillOpacity: 0.6,
+                    radius: 10
+                }).addTo(map).bindPopup(`AQI: ${item.aqi} (${item.level})`);
+                aqiCircles.push(circle);
+            });
+        })
+        .catch(err => console.error("Lỗi loadSavedAQI:", err));
 }
 
 function fetchData() {
@@ -138,8 +135,6 @@ function fetchData() {
                 aqi: aqiData.aqi,
                 level: aqiData.level
             };
-
-            saveToLocalStorage(dataToSave);
 
             fetch('/api/log', {
                 method: 'POST',
