@@ -80,14 +80,27 @@ function saveToLocalStorage(data) {
 
 function loadSavedAQI() {
     const data = JSON.parse(localStorage.getItem('aqiData') || '[]');
+
+    // Lọc trùng để không thêm các vòng tròn lặp lại
+    const filtered = [];
     data.forEach(item => {
+        const isNear = filtered.some(f =>
+            map.distance(L.latLng(f.lat, f.lng), L.latLng(item.lat, item.lng)) < 5
+        );
+        if (!isNear) {
+            filtered.push(item);
+        }
+    });
+
+    // Vẽ vòng tròn
+    filtered.forEach(item => {
         removeDuplicateCircle(item.lat, item.lng);
         const color = getAQIColor(item.level);
         const circle = L.circle([item.lat, item.lng], {
             stroke: false,
             fillColor: color,
             fillOpacity: 0.6,
-            radius: 10
+            radius: 50
         }).addTo(map).bindPopup(`AQI: ${item.aqi} (${item.level})`);
         aqiCircles.push(circle);
     });
@@ -119,7 +132,7 @@ function fetchData() {
                 stroke: false,
                 fillColor: aqiColor,
                 fillOpacity: 0.6,
-                radius: 10
+                radius: 50
             }).addTo(map).bindPopup(`AQI: ${aqiData.aqi} (${aqiData.level})`);
 
             aqiCircles.push(circle);
@@ -156,7 +169,6 @@ function fetchData() {
         .catch(err => console.error("Lỗi lấy dữ liệu:", err));
 }
 
-// ✅ Hàm openTab cần nằm bên ngoài DOMContentLoaded để gọi từ HTML
 function openTab(evt, tabName) {
     const tabcontent = document.getElementsByClassName("tabcontent");
     for (let i = 0; i < tabcontent.length; i++) {
@@ -179,7 +191,7 @@ function openTab(evt, tabName) {
 }
 
 document.addEventListener('DOMContentLoaded', function () {
-    document.querySelector('.tablink').click(); // chọn tab đầu
+    document.querySelector('.tablink').click();
     initMap();
     loadSavedAQI();
     setInterval(fetchData, 5000);
