@@ -20,6 +20,7 @@ if not DATABASE_URL:
 
 try:
     conn = psycopg2.connect(DATABASE_URL)
+    conn.autocommit = False  # Tắt autocommit để quản lý giao dịch thủ công
     logger.info("Successfully connected to PostgreSQL database")
 except psycopg2.Error as e:
     logger.error(f"Failed to connect to database: {str(e)}")
@@ -39,7 +40,6 @@ def get_data():
         response = requests.get(API_URL, headers=headers, timeout=10)
         response.raise_for_status()
         
-        # Lấy dữ liệu từ API
         data = response.json()
         if not data:
             logger.warning("No data returned from API")
@@ -51,10 +51,9 @@ def get_data():
             return jsonify({'error': 'Invalid data format from API: expected a dictionary'}), 500
         obj = latest.get('object', {})
 
-        # Chỉ lưu dữ liệu nếu obj có ít nhất một giá trị cần thiết
         if obj and any([obj.get('latitude'), obj.get('longitude')]):
+            cur = conn.cursor()
             try:
-                cur = conn.cursor()
                 cur.execute("""
                     INSERT INTO aqi_circles (latitude, longitude, aqi, level, pm25, pm10, no2, so2, co, temperature, humidity, uv)
                     VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
@@ -62,8 +61,8 @@ def get_data():
                 """, (
                     obj.get('latitude'),
                     obj.get('longitude'),
-                    0,  # aqi sẽ được tính từ client
-                    'unknown',  # level sẽ được tính từ client
+                    0,
+                    'unknown',
                     obj.get('pm25'),
                     obj.get('pm10'),
                     obj.get('no2'),
@@ -74,12 +73,13 @@ def get_data():
                     obj.get('uv')
                 ))
                 conn.commit()
-                cur.close()
                 logger.info("Data successfully saved to database")
             except psycopg2.Error as e:
+                conn.rollback()  # Rollback khi lỗi xảy ra
                 logger.error(f"Database error while saving data: {str(e)}")
-                # Không trả về lỗi 500, chỉ ghi log và tiếp tục
-                pass
+                return jsonify({'error': f'Database error: {str(e)}'}), 500
+            finally:
+                cur.close()
 
         return jsonify(data)
     except requests.exceptions.RequestException as e:
@@ -98,23 +98,26 @@ def log_data():
             return jsonify({"error": "No data received"}), 400
 
         cur = conn.cursor()
-        cur.execute("""
-            INSERT INTO aqi_circles (latitude, longitude, aqi, level)
-            VALUES (%s, %s, %s, %s)
-            RETURNING id
-        """, (
-            new_data.get('lat'),
-            new_data.get('lng'),
-            new_data.get('aqi'),
-            new_data.get('level')
-        ))
-        conn.commit()
-        cur.close()
-        logger.info("Data logged successfully")
-        return jsonify({"message": "Logged successfully"}), 200
-    except psycopg2.Error as e:
-        logger.error(f"Database error: {str(e)}")
-        return jsonify({'error': f'Database error: {str(e)}'}), 500
+        try:
+            cur.execute("""
+                INSERT INTO aqi_circles (latitude, longitude, aqi, level)
+                VALUES (%s, %s, %s, %s)
+                RETURNING id
+            """, (
+                new_data.get('lat'),
+                new_data.get('lng'),
+                new_data.get('aqi'),
+                new_data.get('level')
+            ))
+            conn.commit()
+            logger.info("Data logged successfully")
+            return jsonify({"message": "Logged successfully"}), 200
+        except psycopg2.Error as e:
+            conn.rollback()
+            logger.error(f"Database error: {str(e)}")
+            return jsonify({'error': f'Database error: {str(e)}'}), 500
+        finally:
+            cur.close()
     except Exception as e:
         logger.error(f"Unexpected error: {str(e)}")
         return jsonify({"error": str(e)}), 500
@@ -123,19 +126,25 @@ def log_data():
 def get_logged_data():
     try:
         cur = conn.cursor()
-        cur.execute("SELECT latitude, longitude, aqi, level FROM aqi_circles WHERE aqi != 0 AND level != 'unknown'")
-        rows = cur.fetchall()
-        cur.close()
-
-        data = [{"lat": row[0], "lng": row[1], "aqi": row[2], "level": row[3]} for row in rows]
-        logger.info(f"Retrieved {len(data)} records from database")
-        return jsonify(data), 200
-    except psycopg2.Error as e:
-        logger.error(f"Database error: {str(e)}")
-        return jsonify({'error': f'Database error: {str(e)}'}), 500
+        try:
+            cur.execute("SELECT latitude, longitude, aqi, level FROM aqi_circles WHERE aqi != 0 AND level != 'unknown'")
+            rows = cur.fetchall()
+            conn.commit()  # Commit sau khi lấy dữ liệu
+            data = [{"lat": row[0], "lng": row[1], "aqi": row[2], "level": row[3]} for row in rows]
+            logger.info(f"Retrieved {len(data)} records from database")
+            return jsonify(data), 200
+        except psycopg2.Error as e:
+            conn.rollback()
+            logger.error(f"Database error: {str(e)}")
+            return jsonify({'error': f'Database error: {str(e)}'}), 500
+        finally:
+            cur.close()
     except Exception as e:
         logger.error(f"Unexpected error: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
-    app.run(debug=False, host='0.0.0.0', port=int(os.getenv('PORT', 5500)))
+    try:
+        app.run(debug=False, host='0.0.0.0', port=int(os.getenv('PORT', 5500)))
+    except Exception as e:
+        logger.error(f"Application startup failed: {str(e)}")
