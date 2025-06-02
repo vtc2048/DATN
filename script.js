@@ -78,11 +78,16 @@ function loadSavedAQI() {
         .then(res => res.json())
         .then(data => {
             const unique = [];
+
             data.forEach(entry => {
-                const exists = unique.some(e =>
-                    Math.abs(e.lat - entry.lat) < 0.00005 && Math.abs(e.lng - entry.lng) < 0.00005
-                );
-                if (!exists) unique.push(entry);
+                const isNear = unique.some(e => {
+                    const dist = map.distance(L.latLng(e.lat, e.lng), L.latLng(entry.lat, entry.lng));
+                    return dist < 5;
+                });
+
+                if (!isNear) {
+                    unique.push(entry);
+                }
             });
 
             unique.forEach(item => {
@@ -91,7 +96,7 @@ function loadSavedAQI() {
                     stroke: false,
                     fillColor: color,
                     fillOpacity: 0.6,
-                    radius: 10
+                    radius: 50
                 }).addTo(map).bindPopup(`AQI: ${item.aqi} (${item.level})`);
                 aqiCircles.push(circle);
             });
