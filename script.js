@@ -10,7 +10,7 @@ function initMap() {
 }
 
 function isDuplicate(lat, lng) {
-    const thresholdMeters = 10; // Tăng ngưỡng lên 10 mét để tránh đè chồng
+    const thresholdMeters = 10; // Ngưỡng 10 mét
     for (let circle of aqiCircles) {
         if (map.distance(circle.getLatLng(), L.latLng(lat, lng)) < thresholdMeters) {
             return true;
@@ -74,24 +74,29 @@ function loadSavedAQI() {
     fetch('/api/log')
         .then(res => res.json())
         .then(data => {
+            // Lọc trùng lặp trong dữ liệu trước khi vẽ
             const uniqueData = [];
             data.forEach(entry => {
                 const isNear = uniqueData.some(e => {
                     const dist = map.distance(L.latLng(e.lat, e.lng), L.latLng(entry.lat, entry.lng));
-                    return dist < 10; // Sử dụng ngưỡng 10 mét
+                    return dist < 10;
+                }) || aqiCircles.some(circle => {
+                    const dist = map.distance(circle.getLatLng(), L.latLng(entry.lat, entry.lng));
+                    return dist < 10;
                 });
                 if (!isNear) {
                     uniqueData.push(entry);
                 }
             });
 
+            // Vẽ các vòng tròn không trùng lặp
             uniqueData.forEach(item => {
                 const color = getAQIColor(item.level);
                 const circle = L.circle([item.lat, item.lng], {
                     stroke: false,
                     fillColor: color,
                     fillOpacity: 0.6,
-                    radius: 330
+                    radius: 50
                 }).addTo(map).bindPopup(`AQI: ${item.aqi} (${item.level})`);
                 aqiCircles.push(circle);
             });
@@ -124,7 +129,7 @@ function fetchData() {
                     stroke: false,
                     fillColor: aqiColor,
                     fillOpacity: 0.6,
-                    radius: 30
+                    radius: 10
                 }).addTo(map).bindPopup(`AQI: ${aqiData.aqi} (${aqiData.level})`);
                 aqiCircles.push(circle);
             }
