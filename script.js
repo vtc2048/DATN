@@ -115,7 +115,7 @@ function fetchData() {
 
             // Lọc dữ liệu trong 24 giờ gần nhất
             const now = new Date();
-            const oneDayAgo = new Date(now - 24 * 60 * 60 * 1000);
+            const oneDayAgo = new Date(now - 30 * 24 * 60 * 60 * 1000);
             const filteredData = data
                 .filter(item => {
                     if (!item.time || !item.object) return false;
@@ -192,19 +192,17 @@ function fetchData() {
                 if (circle) {
                     // Cập nhật vòng tròn hiện có
                     circle.setStyle({ fillColor: aqiColor });
-                    const popupContent = `<div style="background-color: ${aqiColor}; color: #000; font-weight: bold;">AQI: ${aqiData.aqi} (${aqiData.level})</div>`;
-                    circle.getPopup().setContent(popupContent);
+                    circle.getPopup().setContent(`AQI: ${aqiData.aqi} (${aqiData.level})`);
                     newCircles.push(circle);
                 } else {
                     // Tạo vòng tròn mới
-                    const popupContent = `<div style="background-color: ${aqiColor}; color: #000; font-weight: bold;">AQI: ${aqiData.aqi} (${aqiData.level})</div>`;
                     circle = L.circle(latlng, {
                         stroke: false,
                         fillColor: aqiColor,
                         fillOpacity: 0.6,
-                        radius: 10
+                        radius: 60
                     }).addTo(map);
-                    circle.bindPopup(popupContent, { autoClose: false, closeOnClick: false, autoPan: false });
+                    circle.bindPopup(`AQI: ${aqiData.aqi} (${aqiData.level})`, { autoClose: false, closeOnClick: false, autoPan: false });
                     circle.on('click', function (e) {
                         this.openPopup();
                     });
@@ -282,7 +280,7 @@ function openTab(evt, tabName) {
     }
 
     document.getElementById(tabName).style.display = "block";
-    evt.currentTarget.style.className += " active";
+    evt.currentTarget.className += " active";
 
     if (tabName === 'Home') {
         if (!map) {
@@ -292,11 +290,6 @@ function openTab(evt, tabName) {
         }
         fetchData();
     }
-}
-
-document.addEventListener(type, listener) {
-    this.removeEventListener(type, listener);
-    this.addEventListener(type, listener);
 }
 
 document.addEventListener('DOMContentLoaded', function () {
