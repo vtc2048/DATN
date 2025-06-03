@@ -93,10 +93,10 @@ function fetchData() {
             }
 
             const circle = L.circle([lat, lng], {
-                color: aqiColor,
+                stroke: false,
                 fillColor: aqiColor,
                 fillOpacity: 0.6,
-                radius: 50
+                radius: 10
             }).addTo(map).bindPopup(`AQI: ${aqiData.aqi} (${aqiData.level})`);
             aqiCircles.push(circle);
 
@@ -139,10 +139,10 @@ function loadSavedAQI() {
             data.forEach(item => {
                 const color = getAQIColor(item.level);
                 const circle = L.circle([item.lat, item.lng], {
-                    color,
+                    stroke: false,
                     fillColor: color,
                     fillOpacity: 0.6,
-                    radius: 50
+                    radius: 10
                 }).addTo(map).bindPopup(`AQI: ${item.aqi} (${item.level})`);
                 aqiCircles.push(circle);
             });
