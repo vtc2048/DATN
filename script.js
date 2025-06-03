@@ -12,11 +12,41 @@ function initMap() {
         attribution: '© OpenStreetMap contributors'
     }).addTo(map);
 
-    // Ngăn chặn đóng popup khi nhấp ngoài
+    // Ngăn chặn đóng popup khi nhấp ngoài và điều chỉnh khi zoom
     map.on('popupopen', function (e) {
         e.popup.options.autoClose = false;
         e.popup.options.closeOnClick = false;
+        adjustPopupSize(e.popup);
     });
+
+    // Điều chỉnh popup khi zoom thay đổi
+    map.on('zoomend', function () {
+        aqiCircles.forEach(circle => {
+            if (circle.isPopupOpen()) {
+                adjustPopupSize(circle.getPopup());
+            }
+        });
+    });
+}
+
+// Hàm điều chỉnh kích thước popup dựa trên mức zoom
+function adjustPopupSize(popup) {
+    const zoom = map.getZoom();
+    let fontSize = 14; // Kích thước font mặc định
+    let padding = 5; // Padding mặc định
+
+    // Giảm kích thước font và padding khi zoom nhỏ
+    if (zoom < 12) {
+        fontSize = 10;
+        padding = 3;
+    } else if (zoom < 14) {
+        fontSize = 12;
+        padding = 4;
+    }
+
+    const content = popup.getContent();
+    popup.setContent(`<div style="font-size: ${fontSize}px; padding: ${padding}px;">${content}</div>`);
+    popup.update(); // Cập nhật popup để áp dụng thay đổi
 }
 
 // ================== AQI LOGIC ===================
@@ -172,7 +202,7 @@ function fetchData() {
                         fillOpacity: 0.6,
                         radius: 60
                     }).addTo(map);
-                    circle.bindPopup(`AQI: ${aqiData.aqi} (${aqiData.level})`, { autoClose: false, closeOnClick: false });
+                    circle.bindPopup(`AQI: ${aqiData.aqi} (${aqiData.level})`, { autoClose: false, closeOnClick: false, autoPan: false });
                     circle.on('click', function (e) {
                         this.openPopup();
                     });
