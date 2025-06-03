@@ -85,7 +85,7 @@ function fetchData() {
 
             // Lọc dữ liệu trong 24 giờ gần nhất
             const now = new Date();
-            const oneDayAgo = new Date(now - 30 * 24 * 60 * 60 * 1000);
+            const oneDayAgo = new Date(now - 24 * 60 * 60 * 1000);
             const filteredData = data
                 .filter(item => {
                     if (!item.time || !item.object) return false;
@@ -96,6 +96,7 @@ function fetchData() {
 
             // Tạo bản đồ vị trí để theo dõi và giữ vòng tròn mới nhất
             const locationMap = new Map();
+            const distanceThreshold = 50; // Ngưỡng khoảng cách (mét) để xác định vị trí trùng, có thể điều chỉnh
             filteredData.forEach((item, index) => {
                 const obj = item.object;
                 if (!obj || !obj.latitude || !obj.longitude) {
@@ -106,11 +107,23 @@ function fetchData() {
                 const lat = obj.latitude;
                 const lng = obj.longitude;
                 const latlng = L.latLng(lat, lng);
-                const locationKey = `${lat.toFixed(3)},${lng.toFixed(3)}`; // Giảm độ chính xác xuống 3 chữ số thập phân
 
-                // Chỉ giữ bản ghi mới nhất cho mỗi vị trí
-                if (!locationMap.has(locationKey) || new Date(item.time) > new Date(locationMap.get(locationKey).time)) {
-                    locationMap.set(locationKey, item);
+                let isDuplicate = false;
+                for (let [key, existingItem] of locationMap.entries()) {
+                    const existingLatLng = L.latLng(existingItem.object.latitude, existingItem.object.longitude);
+                    const distance = latlng.distanceTo(existingLatLng);
+                    if (distance < distanceThreshold) {
+                        isDuplicate = true;
+                        // Cập nhật nếu bản ghi mới có thời gian mới hơn
+                        if (new Date(item.time) > new Date(existingItem.time)) {
+                            locationMap.set(key, item);
+                        }
+                        break;
+                    }
+                }
+
+                if (!isDuplicate) {
+                    locationMap.set(latlng.toString(), item); // Sử dụng toString() của latlng làm key
                 }
             });
 
@@ -118,8 +131,7 @@ function fetchData() {
             const existingCircles = new Map();
             aqiCircles.forEach(circle => {
                 const latlng = circle.getLatLng();
-                const locationKey = `${latlng.lat.toFixed(3)},${latlng.lng.toFixed(3)}`; // Giảm độ chính xác xuống 3 chữ số thập phân
-                existingCircles.set(locationKey, circle);
+                existingCircles.set(latlng.toString(), circle); // Sử dụng toString() của latlng làm key
             });
 
             // Cập nhật hoặc vẽ lại vòng tròn
@@ -142,7 +154,7 @@ function fetchData() {
                         stroke: false,
                         fillColor: aqiColor,
                         fillOpacity: 0.6,
-                        radius: 50
+                        radius: 10
                     }).addTo(map);
                     circle.bindPopup(`AQI: ${aqiData.aqi} (${aqiData.level})`, { autoClose: false, closeOnClick: false });
                     circle.on('click', function (e) {
@@ -153,7 +165,7 @@ function fetchData() {
             });
 
             // Xóa các vòng tròn không còn trong dữ liệu mới
-            aqiCircles = aqiCircles.filter(circle => locationMap.has(`${circle.getLatLng().lat.toFixed(3)},${circle.getLatLng().lng.toFixed(3)}`));
+            aqiCircles = aqiCircles.filter(circle => locationMap.has(circle.getLatLng().toString()));
 
             // Cập nhật marker và UI cho dữ liệu mới nhất
             if (filteredData.length > 0) {
