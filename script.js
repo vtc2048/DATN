@@ -192,17 +192,19 @@ function fetchData() {
                 if (circle) {
                     // Cập nhật vòng tròn hiện có
                     circle.setStyle({ fillColor: aqiColor });
-                    circle.getPopup().setContent(`AQI: ${aqiData.aqi} (${aqiData.level})`);
+                    const popupContent = `<div style="background-color: ${aqiColor}; color: #000; font-weight: bold;">AQI: ${aqiData.aqi} (${aqiData.level})</div>`;
+                    circle.getPopup().setContent(popupContent);
                     newCircles.push(circle);
                 } else {
                     // Tạo vòng tròn mới
+                    const popupContent = `<div style="background-color: ${aqiColor}; color: #000; font-weight: bold;">AQI: ${aqiData.aqi} (${aqiData.level})</div>`;
                     circle = L.circle(latlng, {
                         stroke: false,
                         fillColor: aqiColor,
                         fillOpacity: 0.6,
-                        radius: 60
+                        radius: 10
                     }).addTo(map);
-                    circle.bindPopup(`AQI: ${aqiData.aqi} (${aqiData.level})`, { autoClose: false, closeOnClick: false, autoPan: false });
+                    circle.bindPopup(popupContent, { autoClose: false, closeOnClick: false, autoPan: false });
                     circle.on('click', function (e) {
                         this.openPopup();
                     });
