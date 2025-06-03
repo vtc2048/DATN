@@ -150,11 +150,10 @@ function fetchData() {
                 return;
             }
 
-            // Kiểm tra tọa độ
-            let gpsMissing = false;
-            if (obj.latitude == null || obj.longitude == null) {
-                gpsMissing = true;
-                console.warn("Dữ liệu thiếu tọa độ GPS, sử dụng dữ liệu cũ trên bản đồ");
+            // Kiểm tra tọa độ (xác định lỗi GPS khi cả latitude và longitude đều là 0.0)
+            let gpsError = (obj.latitude === 0.0 && obj.longitude === 0.0);
+            if (gpsError) {
+                console.warn("Dữ liệu GPS lỗi (0.0, 0.0), sử dụng dữ liệu cũ trên bản đồ");
 
                 // Hiển thị thông báo
                 let warningDiv = document.getElementById('gps-warning');
@@ -174,15 +173,15 @@ function fetchData() {
                     document.getElementById('map').parentElement.appendChild(warningDiv);
                 }
             } else {
-                // Xóa thông báo nếu có tọa độ
+                // Xóa thông báo nếu có tọa độ hợp lệ
                 const warningDiv = document.getElementById('gps-warning');
                 if (warningDiv) {
                     warningDiv.remove();
                 }
             }
 
-            // Nếu có tọa độ, lưu dữ liệu này làm dữ liệu hợp lệ cuối cùng
-            if (!gpsMissing) {
+            // Nếu có tọa độ hợp lệ, lưu dữ liệu này làm dữ liệu hợp lệ cuối cùng
+            if (!gpsError && obj.latitude >= -90 && obj.latitude <= 90 && obj.longitude >= -180 && obj.longitude <= 180) {
                 lastValidData = filteredData;
             }
 
@@ -196,7 +195,7 @@ function fetchData() {
             });
 
             // Sử dụng dữ liệu hợp lệ (mới hoặc cũ) để vẽ bản đồ
-            const dataToRender = gpsMissing && lastValidData ? lastValidData : filteredData;
+            const dataToRender = gpsError && lastValidData ? lastValidData : filteredData;
             renderMapFromData(dataToRender, openPopups);
 
             // Cập nhật thông số cảm biến và AQI (luôn sử dụng dữ liệu mới nhất)
@@ -317,10 +316,10 @@ function renderMapFromData(data, openPopups = new Map()) {
     });
     aqiCircles = newCircles;
 
-    // Cập nhật marker cho dữ liệu mới nhất (nếu có tọa độ)
+    // Cập nhật marker cho dữ liệu mới nhất (nếu có tọa độ hợp lệ)
     const latestItem = data[0];
     const obj = latestItem.object;
-    if (obj.latitude != 0 && obj.longitude != 0) {
+    if (obj.latitude !== 0.0 || obj.longitude !== 0.0) {
         if (!marker) {
             marker = L.marker([obj.latitude, obj.longitude]).addTo(map).bindPopup("Trạm quan trắc", { autoClose: false, closeOnClick: false });
             marker.openPopup();
