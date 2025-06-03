@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trạm Quan Trắc Không Khí</title>
+    <title>Ứng Dụng Theo Dõi Chất Lượng Không Khí</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -13,76 +13,86 @@
     <div class="container">
         <div class="tabs">
             <button class="tablink" onclick="openTab(event, 'Home')">Trang Chủ</button>
-            <button class="tablink" onclick="openTab(event, 'Guide')">AQI</button>
+            <button class="tablink" onclick="openTab(event, 'Guide')">Hướng Dẫn</button>
             <button class="tablink" onclick="openTab(event, 'Contact')">Liên Hệ</button>
         </div>
 
         <div id="Home" class="tabcontent">
             <div class="home-container">
                 <div class="sidebar">
-                    <h2>Thông số môi trường tại trạm</h2>
+                    <h2>Thông số cảm biến</h2>
                     <div class="sensor-cards">
-                        <div class="sensor-card">
-                            <img src="img/aqi.png" alt="AQI" class="sensor-icon">
-                            <div class="sensor-info">
-                                <p class="sensor-name">AQI</p>
-                                <p class="sensor-value" id="aqi">--</p>
+                        <div class="sensor-card-row">
+                            <div class="sensor-card">
+                                <img src="img/aqi.png" alt="AQI" class="sensor-icon">
+                                <div class="sensor-info">
+                                    <p class="sensor-name">AQI</p>
+                                    <p class="sensor-value" id="aqi">--</p>
+                                </div>
                             </div>
                         </div>
-                        <div class="sensor-card">
-                            <img src="img/temp.png" alt="Nhiệt độ" class="sensor-icon">
-                            <div class="sensor-info">
-                                <p class="sensor-name">Nhiệt độ</p>
-                                <p class="sensor-value" id="temperature">--</p>
+                        <div class="sensor-card-row">
+                            <div class="sensor-card">
+                                <img src="img/temp.png" alt="Nhiệt độ" class="sensor-icon">
+                                <div class="sensor-info">
+                                    <p class="sensor-name">Nhiệt độ</p>
+                                    <p class="sensor-value" id="temperature">--</p>
+                                </div>
+                            </div>
+                            <div class="sensor-card">
+                                <img src="img/hum.png" alt="Độ ẩm" class="sensor-icon">
+                                <div class="sensor-info">
+                                    <p class="sensor-name">Độ ẩm</p>
+                                    <p class="sensor-value" id="humidity">--</p>
+                                </div>
+                            </div>
+                            <div class="sensor-card">
+                                <img src="img/uv.png" alt="UV" class="sensor-icon">
+                                <div class="sensor-info">
+                                    <p class="sensor-name">UV</p>
+                                    <p class="sensor-value" id="uv">--</p>
+                                </div>
                             </div>
                         </div>
-                        <div class="sensor-card">
-                            <img src="img/hum.png" alt="Độ ẩm" class="sensor-icon">
-                            <div class="sensor-info">
-                                <p class="sensor-name">Độ ẩm</p>
-                                <p class="sensor-value" id="humidity">--</p>
+                        <div class="sensor-card-row">
+                            <div class="sensor-card">
+                                <img src="img/no2.png" alt="NO2" class="sensor-icon">
+                                <div class="sensor-info">
+                                    <p class="sensor-name">NO2</p>
+                                    <p class="sensor-value" id="no2">--</p>
+                                </div>
+                            </div>
+                            <div class="sensor-card">
+                                <img src="img/so2.png" alt="SO2" class="sensor-icon">
+                                <div class="sensor-info">
+                                    <p class="sensor-name">SO2</p>
+                                    <p class="sensor-value" id="so2">--</p>
+                                </div>
                             </div>
                         </div>
-                        <div class="sensor-card">
-                            <img src="img/no2.png" alt="NO2" class="sensor-icon">
-                            <div class="sensor-info">
-                                <p class="sensor-name">NO2</p>
-                                <p class="sensor-value" id="no2">--</p>
+                        <div class="sensor-card-row">
+                            <div class="sensor-card">
+                                <img src="img/pm10.png" alt="PM10" class="sensor-icon">
+                                <div class="sensor-info">
+                                    <p class="sensor-name">PM10</p>
+                                    <p class="sensor-value" id="pm10">--</p>
+                                </div>
+                            </div>
+                            <div class="sensor-card">
+                                <img src="img/pm25.png" alt="PM2.5" class="sensor-icon">
+                                <div class="sensor-info">
+                                    <p class="sensor-name">PM2.5</p>
+                                    <p class="sensor-value" id="pm25">--</p>
+                                </div>
                             </div>
                         </div>
-                        <div class="sensor-card">
-                            <img src="img/so2.png" alt="SO2" class="sensor-icon">
-                            <div class="sensor-info">
-                                <p class="sensor-name">SO2</p>
-                                <p class="sensor-value" id="so2">--</p>
-                            </div>
-                        </div>
-                        <div class="sensor-card">
-                            <img src="img/pm10.png" alt="PM10" class="sensor-icon">
-                            <div class="sensor-info">
-                                <p class="sensor-name">PM10</p>
-                                <p class="sensor-value" id="pm10">--</p>
-                            </div>
-                        </div>
-                        <div class="sensor-card">
-                            <img src="img/pm25.png" alt="PM2.5" class="sensor-icon">
-                            <div class="sensor-info">
-                                <p class="sensor-name">PM2.5</p>
-                                <p class="sensor-value" id="pm25">--</p>
-                            </div>
-                        </div>
-                        <div class="sensor-card">
-                            <img src="img/co.png" alt="CO" class="sensor-icon">
-                            <div class="sensor-info">
-                                <p class="sensor-name">CO</p>
-                                <p class="sensor-value" id="co">--</p>
-                            </div>
-                        </div>
-                        <div class="sensor-card">
-                            <img src="img/uv.png" alt="UV" class="sensor-icon">
-                            <div class="sensor-info">
-                                <p class="sensor-name">UV</p>
-                                <p class="sensor-value" id="uv">--</p>
+                        <div class="sensor-card-row">
+                            <div class="sensor-card">
+                                <img src="img/co.png" alt="CO" class="sensor-icon">
+                                <div class="sensor-info">
+                                    <p class="sensor-name">CO</p>
+                                    <p class="sensor-value" id="co">--</p>
+                                </div>
                             </div>
                         </div>
                     </div>
