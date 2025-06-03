@@ -200,7 +200,7 @@ function fetchData() {
                         stroke: false,
                         fillColor: aqiColor,
                         fillOpacity: 0.6,
-                        radius: 60
+                        radius: 90
                     }).addTo(map);
                     circle.bindPopup(`AQI: ${aqiData.aqi} (${aqiData.level})`, { autoClose: false, closeOnClick: false, autoPan: false });
                     circle.on('click', function (e) {
