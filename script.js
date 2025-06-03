@@ -9,16 +9,14 @@ function initMap() {
     }).addTo(map);
 }
 
-function removeDuplicateCircle(lat, lng) {
-    const thresholdMeters = 5;
-    for (let i = 0; i < aqiCircles.length; i++) {
-        const circle = aqiCircles[i];
+function isDuplicate(lat, lng) {
+    const thresholdMeters = 10; // Ngưỡng 10 mét
+    for (let circle of aqiCircles) {
         if (map.distance(circle.getLatLng(), L.latLng(lat, lng)) < thresholdMeters) {
-            map.removeLayer(circle);
-            aqiCircles.splice(i, 1);
-            break;
+            return true;
         }
     }
+    return false;
 }
 
 const VN_AQI_BREAKPOINTS = {
@@ -72,25 +70,38 @@ function getAQIColor(level) {
     }
 }
 
-function saveToLocalStorage(data) {
-    let list = JSON.parse(localStorage.getItem('aqiData') || '[]');
-    list.push(data);
-    localStorage.setItem('aqiData', JSON.stringify(list));
-}
-
 function loadSavedAQI() {
-    const data = JSON.parse(localStorage.getItem('aqiData') || '[]');
-    data.forEach(item => {
-        removeDuplicateCircle(item.lat, item.lng);
-        const color = getAQIColor(item.level);
-        const circle = L.circle([item.lat, item.lng], {
-            stroke: false,
-            fillColor: color,
-            fillOpacity: 0.6,
-            radius: 50
-        }).addTo(map).bindPopup(`AQI: ${item.aqi} (${item.level})`);
-        aqiCircles.push(circle);
-    });
+    fetch('/api/log')
+        .then(res => res.json())
+        .then(data => {
+            // Lọc trùng lặp trong dữ liệu trước khi vẽ
+            const uniqueData = [];
+            data.forEach(entry => {
+                const isNear = uniqueData.some(e => {
+                    const dist = map.distance(L.latLng(e.lat, e.lng), L.latLng(entry.lat, entry.lng));
+                    return dist < 10;
+                }) || aqiCircles.some(circle => {
+                    const dist = map.distance(circle.getLatLng(), L.latLng(entry.lat, entry.lng));
+                    return dist < 10;
+                });
+                if (!isNear) {
+                    uniqueData.push(entry);
+                }
+            });
+
+            // Vẽ các vòng tròn không trùng lặp
+            uniqueData.forEach(item => {
+                const color = getAQIColor(item.level);
+                const circle = L.circle([item.lat, item.lng], {
+                    stroke: false,
+                    fillColor: color,
+                    fillOpacity: 0.6,
+                    radius: 30
+                }).addTo(map).bindPopup(`AQI: ${item.aqi} (${item.level})`);
+                aqiCircles.push(circle);
+            });
+        })
+        .catch(err => console.error("Lỗi loadSavedAQI:", err));
 }
 
 function fetchData() {
@@ -113,24 +124,21 @@ function fetchData() {
                 marker.setLatLng([lat, lng]);
             }
 
-            removeDuplicateCircle(lat, lng);
-
-            const circle = L.circle([lat, lng], {
-                stroke: false,
-                fillColor: aqiColor,
-                fillOpacity: 0.6,
-                radius: 50
-            }).addTo(map).bindPopup(`AQI: ${aqiData.aqi} (${aqiData.level})`);
-
-            aqiCircles.push(circle);
+            if (!isDuplicate(lat, lng)) {
+                const circle = L.circle([lat, lng], {
+                    stroke: false,
+                    fillColor: aqiColor,
+                    fillOpacity: 0.6,
+                    radius: 30
+                }).addTo(map).bindPopup(`AQI: ${aqiData.aqi} (${aqiData.level})`);
+                aqiCircles.push(circle);
+            }
 
             const dataToSave = {
                 lat, lng,
                 aqi: aqiData.aqi,
                 level: aqiData.level
             };
-
-            saveToLocalStorage(dataToSave);
 
             fetch('/api/log', {
                 method: 'POST',
@@ -156,7 +164,6 @@ function fetchData() {
         .catch(err => console.error("Lỗi lấy dữ liệu:", err));
 }
 
-// ✅ Hàm openTab cần nằm bên ngoài DOMContentLoaded để gọi từ HTML
 function openTab(evt, tabName) {
     const tabcontent = document.getElementsByClassName("tabcontent");
     for (let i = 0; i < tabcontent.length; i++) {
@@ -179,7 +186,7 @@ function openTab(evt, tabName) {
 }
 
 document.addEventListener('DOMContentLoaded', function () {
-    document.querySelector('.tablink').click(); // chọn tab đầu
+    document.querySelector('.tablink').click();
     initMap();
     loadSavedAQI();
     setInterval(fetchData, 5000);
