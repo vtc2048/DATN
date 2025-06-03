@@ -133,7 +133,13 @@ function fetchData() {
                     fillColor: aqiColor,
                     fillOpacity: 0.6,
                     radius: 10
-                }).addTo(map).bindPopup(`AQI: ${aqiData.aqi} (${aqiData.level})`);
+                }).addTo(map);
+
+                // Thêm popup và giữ mở
+                circle.bindPopup(`AQI: ${aqiData.aqi} (${aqiData.level})`);
+                circle.on('click', function (e) {
+                    this.openPopup(); // Mở popup của vòng tròn khi nhấp
+                });
 
                 aqiCircles.push(circle);
             });
@@ -145,8 +151,10 @@ function fetchData() {
                 if (!marker) {
                     map.setView([obj.latitude, obj.longitude], 15);
                     marker = L.marker([obj.latitude, obj.longitude]).addTo(map).bindPopup("Trạm quan trắc");
+                    marker.openPopup(); // Mở popup của marker ngay khi tạo
                 } else {
                     marker.setLatLng([obj.latitude, obj.longitude]);
+                    marker.openPopup(); // Đảm bảo popup của marker luôn mở
                 }
 
                 document.getElementById("temperature").textContent = obj.temperature.toFixed(1) + " °C";
