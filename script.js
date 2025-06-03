@@ -10,6 +10,12 @@ function initMap() {
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© OpenStreetMap contributors'
     }).addTo(map);
+
+    // Ngăn chặn đóng popup khi nhấp ngoài
+    map.on('popupopen', function (e) {
+        e.popup.options.autoClose = false;
+        e.popup.options.closeOnClick = false;
+    });
 }
 
 // ================== AQI LOGIC ===================
@@ -78,7 +84,7 @@ function fetchData() {
 
             // Lọc dữ liệu trong 24 giờ gần nhất
             const now = new Date();
-            const oneDayAgo = new Date(now -  2 * 60 * 1000);
+            const oneDayAgo = new Date(now - 24 * 60 * 60 * 1000);
             const filteredData = data
                 .filter(item => {
                     if (!item.time || !item.object) return false;
@@ -146,7 +152,7 @@ function fetchData() {
                         fillOpacity: 0.6,
                         radius: 10
                     }).addTo(map);
-                    circle.bindPopup(`AQI: ${aqiData.aqi} (${aqiData.level})`);
+                    circle.bindPopup(`AQI: ${aqiData.aqi} (${aqiData.level})`, { autoClose: false, closeOnClick: false });
                     circle.on('click', function (e) {
                         this.openPopup(); // Mở popup của vòng tròn khi nhấp
                     });
@@ -164,7 +170,7 @@ function fetchData() {
                 const aqiData = calculateAQIFromSensors(obj); // Tính AQI cho dữ liệu mới nhất
                 if (!marker) {
                     map.setView([obj.latitude, obj.longitude], 15);
-                    marker = L.marker([obj.latitude, obj.longitude]).addTo(map).bindPopup("Trạm quan trắc");
+                    marker = L.marker([obj.latitude, obj.longitude]).addTo(map).bindPopup("Trạm quan trắc", { autoClose: false, closeOnClick: false });
                     marker.openPopup();
                 } else {
                     marker.setLatLng([obj.latitude, obj.longitude]);
