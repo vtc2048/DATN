@@ -82,13 +82,14 @@ function fetchData() {
                     const itemDate = new Date(item.time);
                     return itemDate >= oneDayAgo && itemDate <= now;
                 })
-                .sort((a, b) => new Date(a.time) - new Date(b.time)); // Sắp xếp theo thời gian tăng dần
+                .sort((a, b) => new Date(b.time) - new Date(a.time)); // Sắp xếp theo thời gian giảm dần
 
-            // Xóa tất cả vòng tròn cũ
+            // Xóa tất cả vòng tròn cũ trước khi vẽ lại
             aqiCircles.forEach(circle => map.removeLayer(circle));
             aqiCircles = [];
 
-            // Vẽ vòng tròn cho dữ liệu trong ngày
+            // Tạo bản đồ vị trí để theo dõi và giữ vòng tròn mới nhất
+            const locationMap = new Map();
             filteredData.forEach((item, index) => {
                 const obj = item.object;
                 if (!obj || !obj.latitude || !obj.longitude) {
@@ -102,15 +103,30 @@ function fetchData() {
                 const aqiData = calculateAQIFromSensors(obj);
                 const aqiColor = getAQIColor(aqiData.level);
 
-                // Kiểm tra trùng vị trí
-                for (let i = 0; i < aqiCircles.length; i++) {
-                    if (map.distance(aqiCircles[i].getLatLng(), latlng) < 5) {
-                        // Nếu trùng, giữ vòng tròn mới hơn (do dữ liệu đã sắp xếp)
-                        map.removeLayer(aqiCircles[i]);
-                        aqiCircles.splice(i, 1);
-                        break;
+                // Tạo khóa vị trí dựa trên tọa độ (sử dụng độ chính xác 5 chữ số thập phân)
+                const locationKey = `${lat.toFixed(5)},${lng.toFixed(5)}`;
+
+                if (locationMap.has(locationKey)) {
+                    // Nếu vị trí đã tồn tại, so sánh thời gian và giữ cái mới hơn
+                    const existingItem = locationMap.get(locationKey);
+                    const existingTime = new Date(existingItem.time);
+                    const currentTime = new Date(item.time);
+                    if (currentTime > existingTime) {
+                        locationMap.set(locationKey, item);
                     }
+                } else {
+                    locationMap.set(locationKey, item);
                 }
+            });
+
+            // Vẽ vòng tròn cho các vị trí duy nhất
+            locationMap.forEach((item, key) => {
+                const obj = item.object;
+                const lat = obj.latitude;
+                const lng = obj.longitude;
+                const latlng = L.latLng(lat, lng);
+                const aqiData = calculateAQIFromSensors(obj);
+                const aqiColor = getAQIColor(aqiData.level);
 
                 const circle = L.circle(latlng, {
                     stroke: false,
@@ -119,34 +135,35 @@ function fetchData() {
                     radius: 10
                 }).addTo(map).bindPopup(`AQI: ${aqiData.aqi} (${aqiData.level})`);
 
-                circle.index = index; // Lưu index để debug nếu cần
                 aqiCircles.push(circle);
-
-                // Cập nhật marker và UI cho dữ liệu mới nhất
-                if (index === filteredData.length - 1) {
-                    if (!marker) {
-                        map.setView([lat, lng], 15);
-                        marker = L.marker([lat, lng]).addTo(map).bindPopup("Trạm");
-                    } else {
-                        marker.setLatLng([lat, lng]);
-                    }
-
-                    document.getElementById("temperature").textContent = obj.temperature.toFixed(1) + " °C";
-                    document.getElementById("humidity").textContent = obj.humidity.toFixed(1) + " %";
-                    document.getElementById("no2").textContent = obj.no2 + " µg/m³";
-                    document.getElementById("so2").textContent = obj.so2 + " µg/m³";
-                    document.getElementById("pm10").textContent = obj.pm10 + " µg/m³";
-                    document.getElementById("pm25").textContent = obj.pm25 + " µg/m³";
-                    document.getElementById("co").textContent = obj.co + " µg/m³";
-                    document.getElementById("uv").textContent = obj.uv + "";
-
-                    const aqiIndicator = document.getElementById("aqiIndicator");
-                    const barWidth = document.querySelector(".aqi-bar").offsetWidth;
-                    const position = (aqiData.aqi / 500) * barWidth;
-                    aqiIndicator.style.left = `${position}px`;
-                    aqiIndicator.dataset.level = aqiData.level;
-                }
             });
+
+            // Cập nhật marker và UI cho dữ liệu mới nhất
+            if (filteredData.length > 0) {
+                const latestItem = filteredData[0]; // Dữ liệu mới nhất do đã sắp xếp giảm dần
+                const obj = latestItem.object;
+                if (!marker) {
+                    map.setView([obj.latitude, obj.longitude], 15);
+                    marker = L.marker([obj.latitude, obj.longitude]).addTo(map).bindPopup("Trạm");
+                } else {
+                    marker.setLatLng([obj.latitude, obj.longitude]);
+                }
+
+                document.getElementById("temperature").textContent = obj.temperature.toFixed(1) + " °C";
+                document.getElementById("humidity").textContent = obj.humidity.toFixed(1) + " %";
+                document.getElementById("no2").textContent = obj.no2 + " µg/m³";
+                document.getElementById("so2").textContent = obj.so2 + " µg/m³";
+                document.getElementById("pm10").textContent = obj.pm10 + " µg/m³";
+                document.getElementById("pm25").textContent = obj.pm25 + " µg/m³";
+                document.getElementById("co").textContent = obj.co + " µg/m³";
+                document.getElementById("uv").textContent = obj.uv + "";
+
+                const aqiIndicator = document.getElementById("aqiIndicator");
+                const barWidth = document.querySelector(".aqi-bar").offsetWidth;
+                const position = (aqiData.aqi / 500) * barWidth;
+                aqiIndicator.style.left = `${position}px`;
+                aqiIndicator.dataset.level = aqiData.level;
+            }
         })
         .catch(err => console.error("Lỗi lấy dữ liệu:", err));
 }
