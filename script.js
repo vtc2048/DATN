@@ -84,7 +84,7 @@ function fetchData() {
 
             // Lọc dữ liệu trong 24 giờ gần nhất
             const now = new Date();
-            const oneDayAgo = new Date(now - 2 * 60 * 1000);
+            const oneDayAgo = new Date(now - 24 * 60 * 60 * 1000);
             const filteredData = data
                 .filter(item => {
                     if (!item.time || !item.object) return false;
@@ -92,13 +92,6 @@ function fetchData() {
                     return itemDate >= oneDayAgo && itemDate <= now;
                 })
                 .sort((a, b) => new Date(b.time) - new Date(a.time)); // Sắp xếp theo thời gian giảm dần
-
-            // Lưu trữ vị trí và trạng thái popup của các vòng tròn hiện tại
-            const existingCircles = new Map();
-            aqiCircles.forEach(circle => {
-                const latlng = circle.getLatLng();
-                existingCircles.set(`${latlng.lat.toFixed(5)},${latlng.lng.toFixed(5)}`, circle);
-            });
 
             // Tạo bản đồ vị trí để theo dõi và giữ vòng tròn mới nhất
             const locationMap = new Map();
@@ -112,22 +105,20 @@ function fetchData() {
                 const lat = obj.latitude;
                 const lng = obj.longitude;
                 const latlng = L.latLng(lat, lng);
-                const aqiData = calculateAQIFromSensors(obj);
-                const aqiColor = getAQIColor(aqiData.level);
-
-                // Tạo khóa vị trí dựa trên tọa độ
                 const locationKey = `${lat.toFixed(5)},${lng.toFixed(5)}`;
 
-                if (locationMap.has(locationKey)) {
-                    const existingItem = locationMap.get(locationKey);
-                    const existingTime = new Date(existingItem.time);
-                    const currentTime = new Date(item.time);
-                    if (currentTime > existingTime) {
-                        locationMap.set(locationKey, item);
-                    }
-                } else {
+                // Chỉ giữ bản ghi mới nhất cho mỗi vị trí
+                if (!locationMap.has(locationKey) || new Date(item.time) > new Date(locationMap.get(locationKey).time)) {
                     locationMap.set(locationKey, item);
                 }
+            });
+
+            // Lưu trữ vị trí và trạng thái popup của các vòng tròn hiện tại
+            const existingCircles = new Map();
+            aqiCircles.forEach(circle => {
+                const latlng = circle.getLatLng();
+                const locationKey = `${latlng.lat.toFixed(5)},${latlng.lng.toFixed(5)}`;
+                existingCircles.set(locationKey, circle);
             });
 
             // Cập nhật hoặc vẽ lại vòng tròn
@@ -145,7 +136,7 @@ function fetchData() {
                     circle.setStyle({ fillColor: aqiColor });
                     circle.getPopup().setContent(`AQI: ${aqiData.aqi} (${aqiData.level})`);
                 } else {
-                    // Tạo vòng tròn mới
+                    // Tạo vòng tròn mới nếu không tồn tại
                     circle = L.circle(latlng, {
                         stroke: false,
                         fillColor: aqiColor,
