@@ -68,13 +68,21 @@ function fetchData() {
     fetch('/api/data')
         .then(res => res.json())
         .then(data => {
-            // Lọc dữ liệu trong 1 ngày (24 giờ gần nhất)
+            if (!data || !Array.isArray(data) || data.length === 0) {
+                console.error("Không có dữ liệu hoặc dữ liệu không hợp lệ");
+                return;
+            }
+
+            // Lọc dữ liệu trong 24 giờ gần nhất
             const now = new Date();
             const oneDayAgo = new Date(now - 24 * 60 * 60 * 1000);
-            const filteredData = data.filter(item => {
-                const itemDate = new Date(item.timestamp);
-                return itemDate >= oneDayAgo && itemDate <= now;
-            });
+            const filteredData = data
+                .filter(item => {
+                    if (!item.time || !item.object) return false;
+                    const itemDate = new Date(item.time);
+                    return itemDate >= oneDayAgo && itemDate <= now;
+                })
+                .sort((a, b) => new Date(a.time) - new Date(b.time)); // Sắp xếp theo thời gian tăng dần
 
             // Xóa tất cả vòng tròn cũ
             aqiCircles.forEach(circle => map.removeLayer(circle));
@@ -83,7 +91,10 @@ function fetchData() {
             // Vẽ vòng tròn cho dữ liệu trong ngày
             filteredData.forEach((item, index) => {
                 const obj = item.object;
-                if (!obj) return;
+                if (!obj || !obj.latitude || !obj.longitude) {
+                    console.warn(`Dữ liệu tại index ${index} thiếu object hoặc tọa độ`);
+                    return;
+                }
 
                 const lat = obj.latitude;
                 const lng = obj.longitude;
@@ -94,16 +105,10 @@ function fetchData() {
                 // Kiểm tra trùng vị trí
                 for (let i = 0; i < aqiCircles.length; i++) {
                     if (map.distance(aqiCircles[i].getLatLng(), latlng) < 5) {
-                        // Nếu trùng, so sánh thời gian và giữ vòng tròn mới hơn
-                        const existingItem = filteredData[aqiCircles[i].index];
-                        const existingDate = new Date(existingItem.timestamp);
-                        const currentDate = new Date(item.timestamp);
-                        if (currentDate > existingDate) {
-                            map.removeLayer(aqiCircles[i]);
-                            aqiCircles.splice(i, 1);
-                        } else {
-                            return; // Bỏ qua nếu vòng tròn hiện tại cũ hơn
-                        }
+                        // Nếu trùng, giữ vòng tròn mới hơn (do dữ liệu đã sắp xếp)
+                        map.removeLayer(aqiCircles[i]);
+                        aqiCircles.splice(i, 1);
+                        break;
                     }
                 }
 
@@ -114,7 +119,7 @@ function fetchData() {
                     radius: 10
                 }).addTo(map).bindPopup(`AQI: ${aqiData.aqi} (${aqiData.level})`);
 
-                circle.index = index; // Lưu index để so sánh thời gian sau
+                circle.index = index; // Lưu index để debug nếu cần
                 aqiCircles.push(circle);
 
                 // Cập nhật marker và UI cho dữ liệu mới nhất
