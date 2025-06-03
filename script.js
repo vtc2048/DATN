@@ -1,5 +1,6 @@
 let map, marker;
 let aqiCircles = [];
+let isFirstLoad = true; // Biến để theo dõi lần tải đầu tiên
 
 function initMap() {
     if (map) map.remove();
@@ -84,7 +85,7 @@ function fetchData() {
 
             // Lọc dữ liệu trong 24 giờ gần nhất
             const now = new Date();
-            const oneDayAgo = new Date(now - 30 * 24 * 60 * 60 * 1000);
+            const oneDayAgo = new Date(now - 24 * 60 * 60 * 1000);
             const filteredData = data
                 .filter(item => {
                     if (!item.time || !item.object) return false;
@@ -160,14 +161,17 @@ function fetchData() {
                 const obj = latestItem.object;
                 const aqiData = calculateAQIFromSensors(obj); // Tính AQI cho dữ liệu mới nhất
                 if (!marker) {
-                    // Chỉ setView lần đầu khi marker chưa tồn tại
-                    map.setView([obj.latitude, obj.longitude], 15);
                     marker = L.marker([obj.latitude, obj.longitude]).addTo(map).bindPopup("Trạm quan trắc", { autoClose: false, closeOnClick: false });
                     marker.openPopup();
                 } else {
-                    // Chỉ cập nhật vị trí marker, không thay đổi tâm bản đồ
                     marker.setLatLng([obj.latitude, obj.longitude]);
                     marker.openPopup();
+                }
+
+                // Chỉ setView trong lần tải đầu tiên
+                if (isFirstLoad) {
+                    map.setView([obj.latitude, obj.longitude], 15);
+                    isFirstLoad = false; // Đặt lại để không setView trong các lần sau
                 }
 
                 document.getElementById("temperature").textContent = obj.temperature.toFixed(1) + " °C";
