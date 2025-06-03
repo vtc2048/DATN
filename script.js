@@ -160,10 +160,12 @@ function fetchData() {
                 const obj = latestItem.object;
                 const aqiData = calculateAQIFromSensors(obj); // Tính AQI cho dữ liệu mới nhất
                 if (!marker) {
+                    // Chỉ setView lần đầu khi marker chưa tồn tại
                     map.setView([obj.latitude, obj.longitude], 15);
                     marker = L.marker([obj.latitude, obj.longitude]).addTo(map).bindPopup("Trạm quan trắc", { autoClose: false, closeOnClick: false });
                     marker.openPopup();
                 } else {
+                    // Chỉ cập nhật vị trí marker, không thay đổi tâm bản đồ
                     marker.setLatLng([obj.latitude, obj.longitude]);
                     marker.openPopup();
                 }
