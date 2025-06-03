@@ -94,13 +94,18 @@ function fetchData() {
                 })
                 .sort((a, b) => new Date(b.time) - new Date(a.time)); // Sắp xếp theo thời gian giảm dần
 
-            // Xóa các vòng tròn cũ trên bản đồ
-            aqiCircles.forEach(circle => map.removeLayer(circle));
-            aqiCircles = [];
+            // Lưu trạng thái popup hiện tại (vị trí nào đang mở popup)
+            const openPopups = new Map();
+            aqiCircles.forEach(circle => {
+                if (circle.isPopupOpen()) {
+                    const latlng = circle.getLatLng();
+                    openPopups.set(latlng.toString(), true);
+                }
+            });
 
             // Tạo danh sách các vị trí duy nhất (không trùng lặp)
             const uniqueLocations = [];
-            const distanceThreshold = 100; // Ngưỡng khoảng cách (mét) để xác định vị trí trùng, có thể điều chỉnh
+            const distanceThreshold = 100; // Ngưỡng khoảng cách (mét) để xác định vị trí trùng
 
             filteredData.forEach(item => {
                 const obj = item.object;
@@ -135,7 +140,15 @@ function fetchData() {
                 }
             });
 
-            // Vẽ các vòng tròn cho các vị trí duy nhất
+            // Lưu trữ các vòng tròn hiện tại
+            const existingCircles = new Map();
+            aqiCircles.forEach(circle => {
+                const latlng = circle.getLatLng();
+                existingCircles.set(latlng.toString(), circle);
+            });
+
+            // Cập nhật hoặc vẽ lại các vòng tròn
+            const newCircles = [];
             uniqueLocations.forEach(item => {
                 const obj = item.object;
                 const lat = obj.latitude;
@@ -143,19 +156,42 @@ function fetchData() {
                 const latlng = L.latLng(lat, lng);
                 const aqiData = calculateAQIFromSensors(obj);
                 const aqiColor = getAQIColor(aqiData.level);
+                const latlngKey = latlng.toString();
 
-                const circle = L.circle(latlng, {
-                    stroke: false,
-                    fillColor: aqiColor,
-                    fillOpacity: 0.6,
-                    radius: 60
-                }).addTo(map);
-                circle.bindPopup(`AQI: ${aqiData.aqi} (${aqiData.level})`, { autoClose: false, closeOnClick: false });
-                circle.on('click', function (e) {
-                    this.openPopup(); // Mở popup của vòng tròn khi nhấp
-                });
-                aqiCircles.push(circle);
+                let circle = existingCircles.get(latlngKey);
+                if (circle) {
+                    // Cập nhật vòng tròn hiện có
+                    circle.setStyle({ fillColor: aqiColor });
+                    circle.getPopup().setContent(`AQI: ${aqiData.aqi} (${aqiData.level})`);
+                    newCircles.push(circle);
+                } else {
+                    // Tạo vòng tròn mới
+                    circle = L.circle(latlng, {
+                        stroke: false,
+                        fillColor: aqiColor,
+                        fillOpacity: 0.6,
+                        radius: 10
+                    }).addTo(map);
+                    circle.bindPopup(`AQI: ${aqiData.aqi} (${aqiData.level})`, { autoClose: false, closeOnClick: false });
+                    circle.on('click', function (e) {
+                        this.openPopup();
+                    });
+                    newCircles.push(circle);
+                }
+
+                // Mở lại popup nếu trước đó nó đang mở
+                if (openPopups.has(latlngKey)) {
+                    circle.openPopup();
+                }
             });
+
+            // Xóa các vòng tròn không còn trong dữ liệu mới
+            aqiCircles.forEach(circle => {
+                if (!newCircles.includes(circle)) {
+                    map.removeLayer(circle);
+                }
+            });
+            aqiCircles = newCircles;
 
             // Cập nhật marker và UI cho dữ liệu mới nhất
             if (filteredData.length > 0) {
