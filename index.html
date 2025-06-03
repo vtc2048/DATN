@@ -2,15 +2,18 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Hệ thống quan trắc môi trường</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ứng Dụng Theo Dõi Chất Lượng Không Khí</title>
     <link rel="stylesheet" href="styles.css">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="script.js" defer></script>
 </head>
 <body>
     <div class="container">
         <div class="tabs">
             <button class="tablink" onclick="openTab(event, 'Home')">Trang Chủ</button>
+            <button class="tablink" onclick="openTab(event, 'Guide')">Hướng Dẫn</button>
             <button class="tablink" onclick="openTab(event, 'Contact')">Liên Hệ</button>
         </div>
 
@@ -20,56 +23,56 @@
                     <h2>Thông số cảm biến</h2>
                     <div class="sensor-cards">
                         <div class="sensor-card">
-                            <img src="img/temp.png" alt="Thermometer" class="sensor-icon">
+                            <img src="https://img.icons8.com/ios-filled/24/000000/temperature.png" alt="Nhiệt độ" class="sensor-icon">
                             <div class="sensor-info">
                                 <p class="sensor-name">Nhiệt độ</p>
                                 <p class="sensor-value" id="temperature">--</p>
                             </div>
                         </div>
                         <div class="sensor-card">
-                            <img src="img/hum.png" alt="Humidity" class="sensor-icon">
+                            <img src="https://img.icons8.com/ios-filled/24/000000/humidity.png" alt="Độ ẩm" class="sensor-icon">
                             <div class="sensor-info">
                                 <p class="sensor-name">Độ ẩm</p>
                                 <p class="sensor-value" id="humidity">--</p>
                             </div>
                         </div>
                         <div class="sensor-card">
-                            <img src="img/no2.png" alt="NO2" class="sensor-icon">
+                            <img src="https://img.icons8.com/ios-filled/24/000000/nitric-oxide.png" alt="NO2" class="sensor-icon">
                             <div class="sensor-info">
                                 <p class="sensor-name">NO2</p>
                                 <p class="sensor-value" id="no2">--</p>
                             </div>
                         </div>
                         <div class="sensor-card">
-                            <img src="img/so2.png" alt="SO2" class="sensor-icon">
+                            <img src="https://img.icons8.com/ios-filled/24/000000/sulfur-dioxide.png" alt="SO2" class="sensor-icon">
                             <div class="sensor-info">
                                 <p class="sensor-name">SO2</p>
                                 <p class="sensor-value" id="so2">--</p>
                             </div>
                         </div>
                         <div class="sensor-card">
-                            <img src="img/pm10.png" alt="PM10" class="sensor-icon">
+                            <img src="https://img.icons8.com/ios-filled/24/000000/pm2-5.png" alt="PM10" class="sensor-icon">
                             <div class="sensor-info">
                                 <p class="sensor-name">PM10</p>
                                 <p class="sensor-value" id="pm10">--</p>
                             </div>
                         </div>
                         <div class="sensor-card">
-                            <img src="img/pm25.png" alt="PM2.5" class="sensor-icon">
+                            <img src="https://img.icons8.com/ios-filled/24/000000/pm2-5.png" alt="PM2.5" class="sensor-icon">
                             <div class="sensor-info">
                                 <p class="sensor-name">PM2.5</p>
                                 <p class="sensor-value" id="pm25">--</p>
                             </div>
                         </div>
                         <div class="sensor-card">
-                            <img src="img/co.png" alt="CO" class="sensor-icon">
+                            <img src="https://img.icons8.com/ios-filled/24/000000/carbon-monoxide.png" alt="CO" class="sensor-icon">
                             <div class="sensor-info">
                                 <p class="sensor-name">CO</p>
                                 <p class="sensor-value" id="co">--</p>
                             </div>
                         </div>
                         <div class="sensor-card">
-                            <img src="img/uv.png" alt="UV" class="sensor-icon">
+                            <img src="https://img.icons8.com/ios-filled/24/000000/sun.png" alt="UV" class="sensor-icon">
                             <div class="sensor-info">
                                 <p class="sensor-name">UV</p>
                                 <p class="sensor-value" id="uv">--</p>
@@ -79,53 +82,60 @@
                 </div>
                 <div class="map-container">
                     <div class="district-buttons">
-                        <button onclick="zoomToDistrict([16.068, 108.220])">Hải Châu</button>
-                        <button onclick="zoomToDistrict([16.050, 108.190])">Thanh Khê</button>
-                        <button onclick="zoomToDistrict([16.100, 108.250])">Sơn Trà</button>
-                        <button onclick="zoomToDistrict([16.030, 108.250])">Ngũ Hành Sơn</button>
-                        <button onclick="zoomToDistrict([16.050, 108.170])">Cẩm Lệ</button>
-                        <button onclick="zoomToDistrict([16.078, 108.133])">Liên Chiểu</button>
-                        <button onclick="zoomToDistrict([16.000, 108.100])">Hòa Vang</button>
-                        <button onclick="zoomToDistrict([16.500, 111.500])">Hoàng Sa</button>
+                        <button onclick="zoomToDistrict([16.05, 108.2])">Hải Châu</button>
+                        <button onclick="zoomToDistrict([16.03, 108.17])">Thanh Khê</button>
+                        <button onclick="zoomToDistrict([16.1, 108.25])">Sơn Trà</button>
+                        <button onclick="zoomToDistrict([16.0, 108.15])">Ngũ Hành Sơn</button>
+                        <button onclick="zoomToDistrict([16.05, 108   <div class="guide-container">
+                        <div class="guide-section aqi-levels">
+                            <h2>Bảng Quy Đổi Chỉ Số Chất Lượng Không Khí VN-AQI</h2>
+                            <div class="aqi-level">
+                                <div class="aqi-icon good"></div>
+                                <p><strong>Tốt 0 - 50:</strong> Chất lượng không khí tốt, không ảnh hưởng tới sức khỏe.</p>
+                            </div>
+                            <div class="aqi-level">
+                                <div class="aqi-icon moderate"></div>
+                                <p><strong>Trung bình 51 - 100:</strong> Chất lượng không khí ở mức chấp nhận được. Tuy nhiên, đối với những người nhạy cảm (người già, trẻ em, người mắc các bệnh hô hấp, tim mạch...), có thể chịu chút ảnh hưởng nhẹ tới sức khỏe.</p>
+                            </div>
+                            <div class="aqi-level">
+                                <div class="aqi-icon unhealthy-for-sensitive"></div>
+                                <p><strong>Kém 101 - 150:</strong> Những người nhạy cảm gặp phải các vấn đề về sức khỏe, những người bình thường ít ảnh hưởng.</p>
+                            </div>
+                            <div class="aqi-level">
+                                <div class="aqi-icon unhealthy"></div>
+                                <p><strong>Xấu 151 - 200:</strong> Những người bình thường bắt đầu có các ảnh hưởng tới sức khỏe, nhóm người nhạy cảm có thể gặp những vấn đề sức khỏe nghiêm trọng hơn.</p>
+                            </div>
+                            <div class="aqi-level">
+                                <div class="aqi-icon very-unhealthy"></div>
+                                <p><strong>Rất xấu 201 - 300:</strong> Cảnh báo ảnh hưởng tới sức khỏe: mọi người bị ảnh hưởng tới sức khỏe nghiêm trọng hơn.</p>
+                            </div>
+                            <div class="aqi-level">
+                                <div class="aqi-icon hazardous"></div>
+                                <p><strong>Nguy hại 301 - 500:</strong> Cảnh báo ảnh hưởng tới sức khỏe: mọi người bị ảnh hưởng tới sức khỏe nghiêm trọng hơn.</p>
+                            </div>
+                        </div>
+                        <div class="guide-section pollutants">
+                            <h2>Các Chất Gây Ô Nhiễm</h2>
+                            <div class="pollutant">
+                                <p><strong>NO2:</strong> Hít thở trong môi trường có nồng độ nitơ dioxit (NO2) ở mức cao có khả năng tăng nguy cơ gây viêm đường hô hấp. Các triệu chứng thường gặp là ho và khò khè, còn các vấn đề de dọa đến sức khỏe nghiêm trọng hơn như nhiễm trùng đường hô hấp hoặc bệnh hen suyễn thường xuất hiện từ mức nguy hiểm trở đi.</p>
+                            </div>
+                            <div class="pollutant">
+                                <p><strong>SO2:</strong> Tiếp xúc lâu hoặc hít thở SO2 có thể dẫn đến tình trạng kích ứng mắt và gây tổn thương đường hô hấp. Người mắc hen suyễn và bệnh phổi mãn tính thường dễ bị viêm phổi mãn tính.</p>
+                            </div>
+                            <div class="pollutant">
+                                <p><strong>CO:</strong> Carbon monoxit (CO) là khí không màu, không mùi và không vị, rất độc hại. Khi hít phải CO ở mức cao, bạn có thể bị ngạt khí do không đủ oxy, gây tổn thương não, tim và các cơ quan khác. Tiếp xúc ngắn hạn với CO có thể dẫn đến đau đầu, chóng mặt, buồn nôn và mệt mỏi. Tiếp xúc lâu dài gây nguy hiểm đến tính mạng.</p>
+                            </div>
+                            <div class="pollutant">
+                                <p><strong>PM2.5:</strong> Vật chất dạng hạt mịn là hạt ô nhiễm có đường kính 2.5 micromet hoặc nhỏ hơn có khả năng đi vào phổi và gây ra nguy cơ nghiêm trọng về sức khỏe. Tác động nghiêm trọng nhất là ở phổi và tim. Nếu tiếp xúc lâu dài có thể dẫn đến bệnh suy giảm chức năng phổi, làm trầm trọng thêm bệnh hen suyễn và tăng nguy cơ đột quỵ.</p>
+                            </div>
+                            <div class="pollutant">
+                                <p><strong>PM10:</strong> Vật chất dạng hạt có kích thước từ 10 micromet hoặc nhỏ hơn có thể tích tụ trong đường dẫn khí, gây ra nguy cơ về sức khỏe. Nếu tiếp xúc lâu dài có thể dẫn đến tình trạng kích ứng mắt và cổ họng, làm trầm trọng thêm bệnh hen suyễn và suy giảm chức năng phổi. Tiếp xúc quá mức với PM10 thường gây nguy hiểm đến tính mạng.</p>
+                            </div>
+                        </div>
                     </div>
-                    <div id="map"></div>
-                    <div class="aqi-bar">
-                        <div class="aqi-segment good">Tốt</div>
-                        <div class="aqi-segment moderate">Trung bình</div>
-                        <div class="aqi-segment unhealthy-for-sensitive">Kém</div>
-                        <div class="aqi-segment unhealthy">Xấu</div>
-                        <div class="aqi-segment very-unhealthy">Rất xấu</div>
-                        <div class="aqi-segment hazardous">Nguy hại</div>
-                        <div class="aqi-indicator" id="aqiIndicator"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div id="Contact" class="tabcontent" style="display:none;">
-            <div class="contact-container">
-                <h2>Liên Hệ Với Chúng Tôi</h2>
-                <div class="contact-buttons">
-                    <a href="https://facebook.com" target="_blank" class="contact-btn facebook">
-                        <i class="fab fa-facebook-f"></i> Facebook
-                    </a>
-                    <a href="https://zalo.me" target="_blank" class="contact-btn zalo">
-                        <i class="fas fa-comment-dots"></i> Zalo
-                    </a>
-                    <a href="https://instagram.com" target="_blank" class="contact-btn instagram">
-                        <i class="fab fa-instagram"></i> Instagram
-                    </a>
-                    <a href="/cdn-cgi/l/email-protection#1a7f627b776a767f5a7d777b737634797577" class="contact-btn gmail">
-                        <i class="fas fa-envelope"></i> Gmail
-                    </a>
                 </div>
             </div>
         </div>
     </div>
-
-    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
-    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-    <script src="script.js"></script>
-    <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'93d111a39be3b05b',t:'MTc0Njc5MjM2Ni4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
 </body>
 </html>
