@@ -3,7 +3,10 @@ let aqiCircles = [];
 
 function initMap() {
     if (map) map.remove();
-    map = L.map('map').setView([16.05, 108.2], 13);
+    map = L.map('map', {
+        closePopupOnClick: false, // Không đóng popup khi nhấp ngoài
+        autoClose: false // Cho phép nhiều popup cùng tồn tại
+    }).setView([16.05, 108.2], 13);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© OpenStreetMap contributors'
     }).addTo(map);
@@ -37,8 +40,8 @@ function calculateAQIFromSensors(obj) {
         so2: calculateIndividualAQI(obj.so2, "so2"),
         no2: calculateIndividualAQI(obj.no2, "no2"),
     };
-    const maxAQI = Math.max(...Object.values(aqiValues));
-    return { aqi: maxAQI, level: getAQILevel(maxAQI) };
+    const maxAQI = Math.max(...Object.values(aqiValues).filter(v => v !== -1)); // Lọc giá trị -1 (không hợp lệ)
+    return { aqi: maxAQI !== -Infinity ? maxAQI : 0, level: getAQILevel(maxAQI !== -Infinity ? maxAQI : 0) };
 }
 
 function getAQILevel(aqi) {
@@ -84,9 +87,12 @@ function fetchData() {
                 })
                 .sort((a, b) => new Date(b.time) - new Date(a.time)); // Sắp xếp theo thời gian giảm dần
 
-            // Xóa tất cả vòng tròn cũ trước khi vẽ lại
-            aqiCircles.forEach(circle => map.removeLayer(circle));
-            aqiCircles = [];
+            // Lưu trữ vị trí và trạng thái popup của các vòng tròn hiện tại
+            const existingCircles = new Map();
+            aqiCircles.forEach(circle => {
+                const latlng = circle.getLatLng();
+                existingCircles.set(`${latlng.lat.toFixed(5)},${latlng.lng.toFixed(5)}`, circle);
+            });
 
             // Tạo bản đồ vị trí để theo dõi và giữ vòng tròn mới nhất
             const locationMap = new Map();
@@ -103,11 +109,10 @@ function fetchData() {
                 const aqiData = calculateAQIFromSensors(obj);
                 const aqiColor = getAQIColor(aqiData.level);
 
-                // Tạo khóa vị trí dựa trên tọa độ (sử dụng độ chính xác 5 chữ số thập phân)
+                // Tạo khóa vị trí dựa trên tọa độ
                 const locationKey = `${lat.toFixed(5)},${lng.toFixed(5)}`;
 
                 if (locationMap.has(locationKey)) {
-                    // Nếu vị trí đã tồn tại, so sánh thời gian và giữ cái mới hơn
                     const existingItem = locationMap.get(locationKey);
                     const existingTime = new Date(existingItem.time);
                     const currentTime = new Date(item.time);
@@ -119,7 +124,7 @@ function fetchData() {
                 }
             });
 
-            // Vẽ vòng tròn cho các vị trí duy nhất
+            // Cập nhật hoặc vẽ lại vòng tròn
             locationMap.forEach((item, key) => {
                 const obj = item.object;
                 const lat = obj.latitude;
@@ -128,33 +133,42 @@ function fetchData() {
                 const aqiData = calculateAQIFromSensors(obj);
                 const aqiColor = getAQIColor(aqiData.level);
 
-                const circle = L.circle(latlng, {
-                    stroke: false,
-                    fillColor: aqiColor,
-                    fillOpacity: 0.6,
-                    radius: 10
-                }).addTo(map);
-
-                // Thêm popup và giữ mở
-                circle.bindPopup(`AQI: ${aqiData.aqi} (${aqiData.level})`);
-                circle.on('click', function (e) {
-                    this.openPopup(); // Mở popup của vòng tròn khi nhấp
-                });
-
-                aqiCircles.push(circle);
+                let circle = existingCircles.get(key);
+                if (circle) {
+                    // Cập nhật màu sắc và popup của vòng tròn hiện có
+                    circle.setStyle({ fillColor: aqiColor });
+                    circle.getPopup().setContent(`AQI: ${aqiData.aqi} (${aqiData.level})`);
+                } else {
+                    // Tạo vòng tròn mới
+                    circle = L.circle(latlng, {
+                        stroke: false,
+                        fillColor: aqiColor,
+                        fillOpacity: 0.6,
+                        radius: 10
+                    }).addTo(map);
+                    circle.bindPopup(`AQI: ${aqiData.aqi} (${aqiData.level})`);
+                    circle.on('click', function (e) {
+                        this.openPopup(); // Mở popup của vòng tròn khi nhấp
+                    });
+                    aqiCircles.push(circle);
+                }
             });
+
+            // Xóa các vòng tròn không còn trong dữ liệu mới
+            aqiCircles = aqiCircles.filter(circle => locationMap.has(`${circle.getLatLng().lat.toFixed(5)},${circle.getLatLng().lng.toFixed(5)}`));
 
             // Cập nhật marker và UI cho dữ liệu mới nhất
             if (filteredData.length > 0) {
-                const latestItem = filteredData[0]; // Dữ liệu mới nhất do đã sắp xếp giảm dần
+                const latestItem = filteredData[0]; // Dữ liệu mới nhất
                 const obj = latestItem.object;
+                const aqiData = calculateAQIFromSensors(obj); // Tính AQI cho dữ liệu mới nhất
                 if (!marker) {
                     map.setView([obj.latitude, obj.longitude], 15);
                     marker = L.marker([obj.latitude, obj.longitude]).addTo(map).bindPopup("Trạm quan trắc");
-                    marker.openPopup(); // Mở popup của marker ngay khi tạo
+                    marker.openPopup();
                 } else {
                     marker.setLatLng([obj.latitude, obj.longitude]);
-                    marker.openPopup(); // Đảm bảo popup của marker luôn mở
+                    marker.openPopup();
                 }
 
                 document.getElementById("temperature").textContent = obj.temperature.toFixed(1) + " °C";
@@ -165,7 +179,7 @@ function fetchData() {
                 document.getElementById("pm25").textContent = obj.pm25 + " µg/m³";
                 document.getElementById("co").textContent = obj.co + " µg/m³";
                 document.getElementById("uv").textContent = obj.uv + "";
-                document.getElementById("aqi").textContent = aqiData.aqi; // Thêm chỉ số AQI
+                document.getElementById("aqi").textContent = aqiData.aqi; // Cập nhật AQI
 
                 const aqiIndicator = document.getElementById("aqiIndicator");
                 const barWidth = document.querySelector(".aqi-bar").offsetWidth;
