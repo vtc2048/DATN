@@ -62,106 +62,86 @@ function getAQIColor(level) {
     }
 }
 
-// =============== LOCAL STORAGE SUPPORT =============
-
-function saveToLocalStorage(data) {
-    let list = JSON.parse(localStorage.getItem('aqiData') || '[]');
-    list.push(data);
-    localStorage.setItem('aqiData', JSON.stringify(list));
-}
-
-function loadSavedAQI() {
-    const data = JSON.parse(localStorage.getItem('aqiData') || '[]');
-    data.forEach(item => {
-        const latlng = L.latLng(item.lat, item.lng);
-        for (let i = 0; i < aqiCircles.length; i++) {
-            if (map.distance(aqiCircles[i].getLatLng(), latlng) < 5) {
-                map.removeLayer(aqiCircles[i]);
-                aqiCircles.splice(i, 1);
-                break;
-            }
-        }
-
-        const color = getAQIColor(item.level);
-        const circle = L.circle(latlng, {
-            stroke: false,
-            fillColor: color,
-            fillOpacity: 0.6,
-            radius: 10
-        }).addTo(map).bindPopup(`AQI: ${item.aqi} (${item.level})`);
-
-        aqiCircles.push(circle);
-    });
-}
-
 // ================= FETCH DATA =======================
 
 function fetchData() {
     fetch('/api/data')
         .then(res => res.json())
         .then(data => {
-            const latest = data[data.length - 1];
-            const obj = latest.object;
-            if (!obj) throw new Error("Không có object");
-
-            const lat = obj.latitude;
-            const lng = obj.longitude;
-            const latlng = L.latLng(lat, lng);
-            const aqiData = calculateAQIFromSensors(obj);
-            const aqiColor = getAQIColor(aqiData.level);
-
-            if (!marker) {
-                map.setView([lat, lng], 15);
-                marker = L.marker([lat, lng]).addTo(map).bindPopup("Trạm");
-            } else {
-                marker.setLatLng([lat, lng]);
-            }
-
-            for (let i = 0; i < aqiCircles.length; i++) {
-                if (map.distance(aqiCircles[i].getLatLng(), latlng) < 5) {
-                    map.removeLayer(aqiCircles[i]);
-                    aqiCircles.splice(i, 1);
-                    break;
-                }
-            }
-
-            const circle = L.circle(latlng, {
-                stroke: false,
-                fillColor: aqiColor,
-                fillOpacity: 0.6,
-                radius: 10
-            }).addTo(map).bindPopup(`AQI: ${aqiData.aqi} (${aqiData.level})`);
-
-            aqiCircles.push(circle);
-
-            const dataToSave = {
-                lat, lng,
-                aqi: aqiData.aqi,
-                level: aqiData.level
-            };
-            saveToLocalStorage(dataToSave);
-
-            fetch('/api/log', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(dataToSave)
+            // Lọc dữ liệu trong 1 ngày (24 giờ gần nhất)
+            const now = new Date();
+            const oneDayAgo = new Date(now - 24 * 60 * 60 * 1000);
+            const filteredData = data.filter(item => {
+                const itemDate = new Date(item.timestamp);
+                return itemDate >= oneDayAgo && itemDate <= now;
             });
 
-            // Cập nhật UI
-            document.getElementById("temperature").textContent = obj.temperature.toFixed(1) + " °C";
-            document.getElementById("humidity").textContent = obj.humidity.toFixed(1) + " %";
-            document.getElementById("no2").textContent = obj.no2 + " µg/m³";
-            document.getElementById("so2").textContent = obj.so2 + " µg/m³";
-            document.getElementById("pm10").textContent = obj.pm10 + " µg/m³";
-            document.getElementById("pm25").textContent = obj.pm25 + " µg/m³";
-            document.getElementById("co").textContent = obj.co + " µg/m³";
-            document.getElementById("uv").textContent = obj.uv + "";
+            // Xóa tất cả vòng tròn cũ
+            aqiCircles.forEach(circle => map.removeLayer(circle));
+            aqiCircles = [];
 
-            const aqiIndicator = document.getElementById("aqiIndicator");
-            const barWidth = document.querySelector(".aqi-bar").offsetWidth;
-            const position = (aqiData.aqi / 500) * barWidth;
-            aqiIndicator.style.left = `${position}px`;
-            aqiIndicator.dataset.level = aqiData.level;
+            // Vẽ vòng tròn cho dữ liệu trong ngày
+            filteredData.forEach((item, index) => {
+                const obj = item.object;
+                if (!obj) return;
+
+                const lat = obj.latitude;
+                const lng = obj.longitude;
+                const latlng = L.latLng(lat, lng);
+                const aqiData = calculateAQIFromSensors(obj);
+                const aqiColor = getAQIColor(aqiData.level);
+
+                // Kiểm tra trùng vị trí
+                for (let i = 0; i < aqiCircles.length; i++) {
+                    if (map.distance(aqiCircles[i].getLatLng(), latlng) < 5) {
+                        // Nếu trùng, so sánh thời gian và giữ vòng tròn mới hơn
+                        const existingItem = filteredData[aqiCircles[i].index];
+                        const existingDate = new Date(existingItem.timestamp);
+                        const currentDate = new Date(item.timestamp);
+                        if (currentDate > existingDate) {
+                            map.removeLayer(aqiCircles[i]);
+                            aqiCircles.splice(i, 1);
+                        } else {
+                            return; // Bỏ qua nếu vòng tròn hiện tại cũ hơn
+                        }
+                    }
+                }
+
+                const circle = L.circle(latlng, {
+                    stroke: false,
+                    fillColor: aqiColor,
+                    fillOpacity: 0.6,
+                    radius: 10
+                }).addTo(map).bindPopup(`AQI: ${aqiData.aqi} (${aqiData.level})`);
+
+                circle.index = index; // Lưu index để so sánh thời gian sau
+                aqiCircles.push(circle);
+
+                // Cập nhật marker và UI cho dữ liệu mới nhất
+                if (index === filteredData.length - 1) {
+                    if (!marker) {
+                        map.setView([lat, lng], 15);
+                        marker = L.marker([lat, lng]).addTo(map).bindPopup("Trạm");
+                    } else {
+                        marker.setLatLng([lat, lng]);
+                    }
+
+                    document.getElementById("temperature").textContent = obj.temperature.toFixed(1) + " °C";
+                    document.getElementById("humidity").textContent = obj.humidity.toFixed(1) + " %";
+                    document.getElementById("no2").textContent = obj.no2 + " µg/m³";
+                    document.getElementById("so2").textContent = obj.so2 + " µg/m³";
+                    document.getElementById("pm10").textContent = obj.pm10 + " µg/m³";
+                    document.getElementById("pm25").textContent = obj.pm25 + " µg/m³";
+                    document.getElementById("co").textContent = obj.co + " µg/m³";
+                    document.getElementById("uv").textContent = obj.uv + "";
+
+                    const aqiIndicator = document.getElementById("aqiIndicator");
+                    const barWidth = document.querySelector(".aqi-bar").offsetWidth;
+                    const position = (aqiData.aqi / 500) * barWidth;
+                    aqiIndicator.style.left = `${position}px`;
+                    aqiIndicator.dataset.level = aqiData.level;
+                }
+            });
         })
         .catch(err => console.error("Lỗi lấy dữ liệu:", err));
 }
@@ -199,5 +179,4 @@ function openTab(evt, tabName) {
 document.addEventListener('DOMContentLoaded', function () {
     document.querySelector('.tablink').click();
     setInterval(fetchData, 5000);
-    loadSavedAQI();
 });
