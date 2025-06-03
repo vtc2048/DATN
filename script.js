@@ -34,7 +34,7 @@ function initMap() {
 function adjustPopupSize(popup) {
     const zoom = map.getZoom();
     let fontSize = 14; // Kích thước font mặc định
-    let padding = 5; // Padding mặc định
+    let padding = 1; // Padding mặc định
 
     // Giảm kích thước font và padding khi zoom nhỏ
     if (zoom < 12) {
