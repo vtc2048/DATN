@@ -320,7 +320,7 @@ function renderMapFromData(data, openPopups = new Map()) {
     // Cập nhật marker cho dữ liệu mới nhất (nếu có tọa độ)
     const latestItem = data[0];
     const obj = latestItem.object;
-    if (obj.latitude != null && obj.longitude != null) {
+    if (obj.latitude != 0 && obj.longitude != 0) {
         if (!marker) {
             marker = L.marker([obj.latitude, obj.longitude]).addTo(map).bindPopup("Trạm quan trắc", { autoClose: false, closeOnClick: false });
             marker.openPopup();
