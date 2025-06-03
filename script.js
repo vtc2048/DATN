@@ -85,7 +85,7 @@ function fetchData() {
 
             // Lọc dữ liệu trong 24 giờ gần nhất
             const now = new Date();
-            const oneDayAgo = new Date(now - 24 * 60 * 60 * 1000);
+            const oneDayAgo = new Date(now - 30 * 24 * 60 * 60 * 1000);
             const filteredData = data
                 .filter(item => {
                     if (!item.time || !item.object) return false;
@@ -142,7 +142,7 @@ function fetchData() {
                         stroke: false,
                         fillColor: aqiColor,
                         fillOpacity: 0.6,
-                        radius: 10
+                        radius: 50
                     }).addTo(map);
                     circle.bindPopup(`AQI: ${aqiData.aqi} (${aqiData.level})`, { autoClose: false, closeOnClick: false });
                     circle.on('click', function (e) {
