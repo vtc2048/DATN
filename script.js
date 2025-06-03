@@ -39,10 +39,10 @@ function adjustPopupSize(popup) {
     // Giảm kích thước font và padding khi zoom nhỏ
     if (zoom < 12) {
         fontSize = 10;
-        padding = 3;
+        padding = 1;
     } else if (zoom < 14) {
         fontSize = 12;
-        padding = 4;
+        padding = 1;
     }
 
     const content = popup.getContent();
