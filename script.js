@@ -282,7 +282,7 @@ function openTab(evt, tabName) {
     }
 
     document.getElementById(tabName).style.display = "block";
-    evt.currentTarget.className += " active";
+    evt.currentTarget.style.className += " active";
 
     if (tabName === 'Home') {
         if (!map) {
@@ -292,6 +292,11 @@ function openTab(evt, tabName) {
         }
         fetchData();
     }
+}
+
+document.addEventListener(type, listener) {
+    this.removeEventListener(type, listener);
+    this.addEventListener(type, listener);
 }
 
 document.addEventListener('DOMContentLoaded', function () {
