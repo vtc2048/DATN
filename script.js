@@ -75,7 +75,7 @@ function fetchData() {
 
             // Lọc dữ liệu trong 24 giờ gần nhất
             const now = new Date();
-            const oneDayAgo = new Date(now - 1 * 60 * 60 * 1000);
+            const oneDayAgo = new Date(now - 24 * 60 * 60 * 1000);
             const filteredData = data
                 .filter(item => {
                     if (!item.time || !item.object) return false;
@@ -144,7 +144,7 @@ function fetchData() {
                 const obj = latestItem.object;
                 if (!marker) {
                     map.setView([obj.latitude, obj.longitude], 15);
-                    marker = L.marker([obj.latitude, obj.longitude]).addTo(map).bindPopup("Trạm");
+                    marker = L.marker([obj.latitude, obj.longitude]).addTo(map).bindPopup("Trạm quan trắc");
                 } else {
                     marker.setLatLng([obj.latitude, obj.longitude]);
                 }
@@ -157,6 +157,7 @@ function fetchData() {
                 document.getElementById("pm25").textContent = obj.pm25 + " µg/m³";
                 document.getElementById("co").textContent = obj.co + " µg/m³";
                 document.getElementById("uv").textContent = obj.uv + "";
+                document.getElementById("aqi").textContent = aqiData.aqi; // Thêm chỉ số AQI
 
                 const aqiIndicator = document.getElementById("aqiIndicator");
                 const barWidth = document.querySelector(".aqi-bar").offsetWidth;
