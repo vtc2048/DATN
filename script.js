@@ -9,22 +9,24 @@ function initMap() {
     }).addTo(map);
 }
 
-function isDuplicate(lat, lng) {
-    const thresholdMeters = 10; // Ngưỡng 10 mét
-    for (let circle of aqiCircles) {
+function removeDuplicateCircle(lat, lng) {
+    const thresholdMeters = 5;
+    for (let i = 0; i < aqiCircles.length; i++) {
+        const circle = aqiCircles[i];
         if (map.distance(circle.getLatLng(), L.latLng(lat, lng)) < thresholdMeters) {
-            return true;
+            map.removeLayer(circle);
+            aqiCircles.splice(i, 1);
+            break;
         }
     }
-    return false;
 }
 
 const VN_AQI_BREAKPOINTS = {
-    pm25: [ { Cp_lo: 0, Cp_hi: 30, I_lo: 0, I_hi: 50 }, { Cp_lo: 31, Cp_hi: 60, I_lo: 51, I_hi: 100 }, { Cp_lo: 61, Cp_hi: 90, I_lo: 101, I_hi: 150 }, { Cp_lo: 91, Cp_hi: 120, I_lo: 151, I_hi: 200 }, { Cp_lo: 121, Cp_hi: 250, I_lo: 201, I_hi: 300 }, { Cp_lo: 251, Cp_hi: 500, I_lo: 301, I_hi: 500 } ],
-    pm10: [ { Cp_lo: 0, Cp_hi: 50, I_lo: 0, I_hi: 50 }, { Cp_lo: 51, Cp_hi: 100, I_lo: 51, I_hi: 100 }, { Cp_lo: 101, Cp_hi: 250, I_lo: 101, I_hi: 150 }, { Cp_lo: 251, Cp_hi: 350, I_lo: 151, I_hi: 200 }, { Cp_lo: 351, Cp_hi: 430, I_lo: 201, I_hi: 300 }, { Cp_lo: 431, Cp_hi: 600, I_lo: 301, I_hi: 500 } ],
-    co:   [ { Cp_lo: 0, Cp_hi: 5, I_lo: 0, I_hi: 50 }, { Cp_lo: 6, Cp_hi: 10, I_lo: 51, I_hi: 100 }, { Cp_lo: 11, Cp_hi: 17, I_lo: 101, I_hi: 150 }, { Cp_lo: 18, Cp_hi: 34, I_lo: 151, I_hi: 200 }, { Cp_lo: 35, Cp_hi: 46, I_lo: 201, I_hi: 300 }, { Cp_lo: 47, Cp_hi: 60, I_lo: 301, I_hi: 500 } ],
-    so2:  [ { Cp_lo: 0, Cp_hi: 50, I_lo: 0, I_hi: 50 }, { Cp_lo: 51, Cp_hi: 100, I_lo: 51, I_hi: 100 }, { Cp_lo: 101, Cp_hi: 199, I_lo: 101, I_hi: 150 }, { Cp_lo: 200, Cp_hi: 349, I_lo: 151, I_hi: 200 }, { Cp_lo: 350, Cp_hi: 439, I_lo: 201, I_hi: 300 }, { Cp_lo: 440, Cp_hi: 600, I_lo: 301, I_hi: 500 } ],
-    no2:  [ { Cp_lo: 0, Cp_hi: 100, I_lo: 0, I_hi: 50 }, { Cp_lo: 101, Cp_hi: 200, I_lo: 51, I_hi: 100 }, { Cp_lo: 201, Cp_hi: 300, I_lo: 101, I_hi: 150 }, { Cp_lo: 301, Cp_hi: 400, I_lo: 151, I_hi: 200 }, { Cp_lo: 401, Cp_hi: 500, I_lo: 201, I_hi: 300 }, { Cp_lo: 501, Cp_hi: 600, I_lo: 301, I_hi: 500 } ]
+    pm25: [{ Cp_lo: 0, Cp_hi: 30, I_lo: 0, I_hi: 50 }, { Cp_lo: 31, Cp_hi: 60, I_lo: 51, I_hi: 100 }, { Cp_lo: 61, Cp_hi: 90, I_lo: 101, I_hi: 150 }, { Cp_lo: 91, Cp_hi: 120, I_lo: 151, I_hi: 200 }, { Cp_lo: 121, Cp_hi: 250, I_lo: 201, I_hi: 300 }, { Cp_lo: 251, Cp_hi: 500, I_lo: 301, I_hi: 500 }],
+    pm10: [{ Cp_lo: 0, Cp_hi: 50, I_lo: 0, I_hi: 50 }, { Cp_lo: 51, Cp_hi: 100, I_lo: 51, I_hi: 100 }, { Cp_lo: 101, Cp_hi: 250, I_lo: 101, I_hi: 150 }, { Cp_lo: 251, Cp_hi: 350, I_lo: 151, I_hi: 200 }, { Cp_lo: 351, Cp_hi: 430, I_lo: 201, I_hi: 300 }, { Cp_lo: 431, Cp_hi: 600, I_lo: 301, I_hi: 500 }],
+    co: [{ Cp_lo: 0, Cp_hi: 5, I_lo: 0, I_hi: 50 }, { Cp_lo: 6, Cp_hi: 10, I_lo: 51, I_hi: 100 }, { Cp_lo: 11, Cp_hi: 17, I_lo: 101, I_hi: 150 }, { Cp_lo: 18, Cp_hi: 34, I_lo: 151, I_hi: 200 }, { Cp_lo: 35, Cp_hi: 46, I_lo: 201, I_hi: 300 }, { Cp_lo: 47, Cp_hi: 60, I_lo: 301, I_hi: 500 }],
+    so2: [{ Cp_lo: 0, Cp_hi: 50, I_lo: 0, I_hi: 50 }, { Cp_lo: 51, Cp_hi: 100, I_lo: 51, I_hi: 100 }, { Cp_lo: 101, Cp_hi: 199, I_lo: 101, I_hi: 150 }, { Cp_lo: 200, Cp_hi: 349, I_lo: 151, I_hi: 200 }, { Cp_lo: 350, Cp_hi: 439, I_lo: 201, I_hi: 300 }, { Cp_lo: 440, Cp_hi: 600, I_lo: 301, I_hi: 500 }],
+    no2: [{ Cp_lo: 0, Cp_hi: 100, I_lo: 0, I_hi: 50 }, { Cp_lo: 101, Cp_hi: 200, I_lo: 51, I_hi: 100 }, { Cp_lo: 201, Cp_hi: 300, I_lo: 101, I_hi: 150 }, { Cp_lo: 301, Cp_hi: 400, I_lo: 151, I_hi: 200 }, { Cp_lo: 401, Cp_hi: 500, I_lo: 201, I_hi: 300 }, { Cp_lo: 501, Cp_hi: 600, I_lo: 301, I_hi: 500 }]
 };
 
 function calculateIndividualAQI(value, pollutant) {
@@ -39,14 +41,14 @@ function calculateIndividualAQI(value, pollutant) {
 
 function calculateAQIFromSensors(obj) {
     const aqiValues = {
-        pm25: calculateIndividualAQI(obj.pm25, "pm25"),
-        pm10: calculateIndividualAQI(obj.pm10, "pm10"),
-        co:   calculateIndividualAQI(obj.co, "co"),
-        so2:  calculateIndividualAQI(obj.so2, "so2"),
-        no2:  calculateIndividualAQI(obj.no2, "no2"),
+        pm25: calculateIndividualAQI(obj.pm25 || 0, "pm25"),
+        pm10: calculateIndividualAQI(obj.pm10 || 0, "pm10"),
+        co: calculateIndividualAQI(obj.co || 0, "co"),
+        so2: calculateIndividualAQI(obj.so2 || 0, "so2"),
+        no2: calculateIndividualAQI(obj.no2 || 0, "no2"),
     };
-    const maxAQI = Math.max(...Object.values(aqiValues));
-    return { aqi: maxAQI, level: getAQILevel(maxAQI) };
+    const maxAQI = Math.max(...Object.values(aqiValues).filter(v => v >= 0));
+    return { aqi: maxAQI >= 0 ? maxAQI : 0, level: getAQILevel(maxAQI >= 0 ? maxAQI : 0) };
 }
 
 function getAQILevel(aqi) {
@@ -70,98 +72,95 @@ function getAQIColor(level) {
     }
 }
 
-function loadSavedAQI() {
-    fetch('/api/log')
-        .then(res => res.json())
-        .then(data => {
-            // Lọc trùng lặp trong dữ liệu trước khi vẽ
-            const uniqueData = [];
-            data.forEach(entry => {
-                const isNear = uniqueData.some(e => {
-                    const dist = map.distance(L.latLng(e.lat, e.lng), L.latLng(entry.lat, entry.lng));
-                    return dist < 10;
-                }) || aqiCircles.some(circle => {
-                    const dist = map.distance(circle.getLatLng(), L.latLng(entry.lat, entry.lng));
-                    return dist < 10;
-                });
-                if (!isNear) {
-                    uniqueData.push(entry);
-                }
-            });
-
-            // Vẽ các vòng tròn không trùng lặp
-            uniqueData.forEach(item => {
-                const color = getAQIColor(item.level);
-                const circle = L.circle([item.lat, item.lng], {
-                    stroke: false,
-                    fillColor: color,
-                    fillOpacity: 0.6,
-                    radius: 30
-                }).addTo(map).bindPopup(`AQI: ${item.aqi} (${item.level})`);
-                aqiCircles.push(circle);
-            });
-        })
-        .catch(err => console.error("Lỗi loadSavedAQI:", err));
+function saveToLocalStorage(data) {
+    let list = JSON.parse(localStorage.getItem('aqiData') || '[]');
+    list.push(data);
+    localStorage.setItem('aqiData', JSON.stringify(list));
 }
 
-function fetchData() {
-    fetch('/api/data')
-        .then(res => res.json())
-        .then(data => {
-            const latest = data[data.length - 1];
-            const obj = latest.object;
-            if (!obj) throw new Error("Không có object");
+function loadSavedAQI() {
+    const data = JSON.parse(localStorage.getItem('aqiData') || '[]');
+    if (Array.isArray(data)) {
+        data.forEach(item => {
+            removeDuplicateCircle(item.lat, item.lng);
+            const color = getAQIColor(item.level);
+            const circle = L.circle([item.lat, item.lng], {
+                stroke: false,
+                fillColor: color,
+                fillOpacity: 0.6,
+                radius: 50
+            }).addTo(map).bindPopup(`AQI: ${item.aqi} (${item.level})`);
+            aqiCircles.push(circle);
+        });
+    } else {
+        console.warn('Dữ liệu từ localStorage không phải là mảng:', data);
+        localStorage.setItem('aqiData', '[]');
+    }
+}
 
-            const lat = obj.latitude;
-            const lng = obj.longitude;
-            const aqiData = calculateAQIFromSensors(obj);
-            const aqiColor = getAQIColor(aqiData.level);
+async function fetchData() {
+    try {
+        const response = await fetch('/api/data', { timeout: 5000 });
+        if (!response.ok) throw new Error(`Lỗi HTTP! mã trạng thái: ${response.status}`);
+        const data = await response.json();
+        const latest = data[data.length - 1];
+        const obj = latest?.object || {};
+        if (!obj.latitude || !obj.longitude) throw new Error("Dữ liệu không có tọa độ hợp lệ");
 
-            if (!marker) {
-                map.setView([lat, lng], 15);
-                marker = L.marker([lat, lng]).addTo(map).bindPopup("Trạm");
-            } else {
-                marker.setLatLng([lat, lng]);
-            }
+        const lat = obj.latitude;
+        const lng = obj.longitude;
+        const aqiData = calculateAQIFromSensors(obj);
+        const aqiColor = getAQIColor(aqiData.level);
 
-            if (!isDuplicate(lat, lng)) {
-                const circle = L.circle([lat, lng], {
-                    stroke: false,
-                    fillColor: aqiColor,
-                    fillOpacity: 0.6,
-                    radius: 30
-                }).addTo(map).bindPopup(`AQI: ${aqiData.aqi} (${aqiData.level})`);
-                aqiCircles.push(circle);
-            }
+        if (!marker) {
+            map.setView([lat, lng], 15);
+            marker = L.marker([lat, lng]).addTo(map).bindPopup("Trạm");
+        } else {
+            marker.setLatLng([lat, lng]);
+        }
 
-            const dataToSave = {
-                lat, lng,
-                aqi: aqiData.aqi,
-                level: aqiData.level
-            };
+        removeDuplicateCircle(lat, lng);
 
-            fetch('/api/log', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(dataToSave)
-            });
+        const circle = L.circle([lat, lng], {
+            stroke: false,
+            fillColor: aqiColor,
+            fillOpacity: 0.6,
+            radius: 50
+        }).addTo(map).bindPopup(`AQI: ${aqiData.aqi} (${aqiData.level})`);
 
-            document.getElementById("temperature").textContent = obj.temperature.toFixed(1) + " °C";
-            document.getElementById("humidity").textContent = obj.humidity.toFixed(1) + " %";
-            document.getElementById("no2").textContent = obj.no2 + " µg/m³";
-            document.getElementById("so2").textContent = obj.so2 + " µg/m³";
-            document.getElementById("pm10").textContent = obj.pm10 + " µg/m³";
-            document.getElementById("pm25").textContent = obj.pm25 + " µg/m³";
-            document.getElementById("co").textContent = obj.co + " µg/m³";
-            document.getElementById("uv").textContent = obj.uv + "";
+        aqiCircles.push(circle);
 
-            const aqiIndicator = document.getElementById("aqiIndicator");
-            const barWidth = document.querySelector(".aqi-bar").offsetWidth;
-            const position = (aqiData.aqi / 500) * barWidth;
-            aqiIndicator.style.left = `${position}px`;
-            aqiIndicator.dataset.level = aqiData.level;
-        })
-        .catch(err => console.error("Lỗi lấy dữ liệu:", err));
+        const dataToSave = {
+            lat, lng,
+            aqi: aqiData.aqi,
+            level: aqiData.level
+        };
+
+        saveToLocalStorage(dataToSave);
+
+        await fetch('/api/log', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(dataToSave)
+        });
+
+        document.getElementById("temperature").textContent = (obj.temperature || 0).toFixed(1) + " °C";
+        document.getElementById("humidity").textContent = (obj.humidity || 0).toFixed(1) + " %";
+        document.getElementById("no2").textContent = (obj.no2 || 0) + " µg/m³";
+        document.getElementById("so2").textContent = (obj.so2 || 0) + " µg/m³";
+        document.getElementById("pm10").textContent = (obj.pm10 || 0) + " µg/m³";
+        document.getElementById("pm25").textContent = (obj.pm25 || 0) + " µg/m³";
+        document.getElementById("co").textContent = (obj.co || 0) + " µg/m³";
+        document.getElementById("uv").textContent = obj.uv || "";
+
+        const aqiIndicator = document.getElementById("aqiIndicator");
+        const barWidth = document.querySelector(".aqi-bar")?.offsetWidth || 0;
+        const position = (aqiData.aqi / 500) * barWidth;
+        aqiIndicator.style.left = `${position}px`;
+        aqiIndicator.dataset.level = aqiData.level;
+    } catch (err) {
+        console.error("Lỗi khi lấy dữ liệu:", err.message);
+    }
 }
 
 function openTab(evt, tabName) {
