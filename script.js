@@ -33,15 +33,15 @@ function initMap() {
 // Hàm điều chỉnh kích thước popup dựa trên mức zoom
 function adjustPopupSize(popup) {
     const zoom = map.getZoom();
-    let fontSize = 14; // Kích thước font mặc định
+    let fontSize = 10; // Kích thước font mặc định
     let padding = 1; // Padding mặc định
 
     // Giảm kích thước font và padding khi zoom nhỏ
     if (zoom < 12) {
-        fontSize = 10;
+        fontSize = 7;
         padding = 1;
     } else if (zoom < 14) {
-        fontSize = 12;
+        fontSize = 7;
         padding = 1;
     }
 
@@ -123,7 +123,7 @@ function fetchData() {
 
             // Lọc dữ liệu trong 24 giờ gần nhất
             const now = new Date();
-            const oneDayAgo = new Date(now - 24 * 60 * 60 * 1000);
+            const oneDayAgo = new Date(now - 30 * 24 * 60 * 60 * 1000);
             const filteredData = data
                 .filter(item => {
                     if (!item.time || !item.object) return false;
