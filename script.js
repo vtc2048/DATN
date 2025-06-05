@@ -18,27 +18,6 @@ function initMap() {
         e.popup.options.autoClose = false;
         e.popup.options.closeOnClick = false;
         adjustPopupSize(e.popup);
-
-        // Gắn sự kiện click cho popup AQI
-        const popupContent = e.popup.getElement();
-        if (popupContent) {
-            const aqiPopup = popupContent.querySelector('.aqi-popup');
-            if (aqiPopup) {
-                console.log("Found .aqi-popup, attaching click event"); // Log để kiểm tra
-                aqiPopup.addEventListener('click', function (event) {
-                    event.stopPropagation(); // Ngăn sự kiện lan ra ngoài
-                    const lat = parseFloat(aqiPopup.dataset.lat);
-                    const lng = parseFloat(aqiPopup.dataset.lng);
-                    const obj = JSON.parse(aqiPopup.dataset.obj);
-                    console.log("Clicked on AQI popup, opening detail popup", { lat, lng, obj }); // Log để kiểm tra
-                    openDetailPopup(lat, lng, obj);
-                });
-            } else {
-                console.warn("Could not find .aqi-popup in popup content"); // Log lỗi nếu không tìm thấy
-            }
-        } else {
-            console.warn("Popup content not available immediately after popupopen"); // Log lỗi nếu không có popup content
-        }
     });
 
     // Điều chỉnh popup khi zoom thay đổi
@@ -54,20 +33,20 @@ function initMap() {
 // Hàm điều chỉnh kích thước popup dựa trên mức zoom
 function adjustPopupSize(popup) {
     const zoom = map.getZoom();
-    let fontSize = 14; // Kích thước font mặc định
-    let padding = 5; // Padding mặc định
+    let fontSize = 10; // Kích thước font mặc định
+    let padding = 1; // Padding mặc định
 
     // Giảm kích thước font và padding khi zoom nhỏ
     if (zoom < 12) {
-        fontSize = 10;
-        padding = 3;
+        fontSize = 7;
+        padding = 1;
     } else if (zoom < 14) {
-        fontSize = 12;
-        padding = 4;
+        fontSize = 7;
+        padding = 1;
     }
 
     const content = popup.getContent();
-    popup.setContent(`<div style="font-size: ${fontSize}px; padding: ${padding}px; cursor: pointer;" class="aqi-popup">${content}</div>`);
+    popup.setContent(`<div style="font-size: ${fontSize}px; padding: ${padding}px;">${content}</div>`);
     popup.update(); // Cập nhật popup để áp dụng thay đổi
 }
 
@@ -144,7 +123,7 @@ function fetchData() {
 
             // Lọc dữ liệu trong 24 giờ gần nhất
             const now = new Date();
-            const oneDayAgo = new Date(now - 24 * 60 * 60 * 1000);
+            const oneDayAgo = new Date(now - 30 * 24 * 60 * 60 * 1000);
             const filteredData = data
                 .filter(item => {
                     if (!item.time || !item.object) return false;
@@ -306,7 +285,7 @@ function renderMapFromData(data, openPopups = new Map()) {
         if (circle) {
             // Cập nhật vòng tròn hiện có
             circle.setStyle({ fillColor: aqiColor });
-            circle.getPopup().setContent(`<div class="aqi-popup" data-lat="${lat}" data-lng="${lng}" data-obj='${JSON.stringify(obj)}'>AQI: ${aqiData.aqi}</div>`);
+            circle.getPopup().setContent(`AQI: ${aqiData.aqi}`);
             newCircles.push(circle);
         } else {
             // Tạo vòng tròn mới
@@ -316,7 +295,7 @@ function renderMapFromData(data, openPopups = new Map()) {
                 fillOpacity: 0.6,
                 radius: 60
             }).addTo(map);
-            circle.bindPopup(`<div class="aqi-popup" data-lat="${lat}" data-lng="${lng}" data-obj='${JSON.stringify(obj)}'>AQI: ${aqiData.aqi}</div>`, { autoClose: false, closeOnClick: false, autoPan: false });
+            circle.bindPopup(`AQI: ${aqiData.aqi}`, { autoClose: false, closeOnClick: false, autoPan: false });
             circle.on('click', function (e) {
                 this.openPopup();
             });
@@ -391,53 +370,3 @@ document.addEventListener('DOMContentLoaded', function () {
     document.querySelector('.tablink').click();
     setInterval(fetchData, 5000);
 });
-
-// Hàm mở popup chi tiết với thiết kế mới
-function openDetailPopup(lat, lng, obj) {
-    const aqiData = calculateAQIFromSensors(obj);
-    const aqiLevel = getAQILevel(aqiData.aqi);
-    const statusText = {
-        'good': 'Tốt',
-        'moderate': 'Trung bình',
-        'unhealthy-for-sensitive': 'Kém',
-        'unhealthy': 'Xấu',
-        'very-unhealthy': 'Rất xấu',
-        'hazardous': 'Nguy hại'
-    }[aqiLevel] || 'Không xác định';
-    const statusImage = {
-        'good': 'img/good.svg',
-        'moderate': 'img/moderate.svg',
-        'unhealthy-for-sensitive': 'img/poor.svg',
-        'unhealthy': 'img/unhealthy.svg',
-        'very-unhealthy': 'img/severa.svg',
-        'hazardous': 'img/hazardous.svg'
-    }[aqiLevel] || 'img/good.svg';
-
-    const detailContent = `
-        <div style="display: flex; flex-direction: row; background-color: ${getAQIColor(aqiLevel)}; padding: 10px; color: #000; border-radius: 5px; min-width: 250px;">
-            <div style="flex: 1; text-align: center;">
-                <h3 style="margin: 0;">AQI</h3>
-                <p style="font-size: 24px; margin: 5px 0;">${aqiData.aqi}</p>
-                <div style="background-color: #90ee90; padding: 5px 10px; border-radius: 5px; display: inline-block;">${statusText}</div>
-            </div>
-            <div style="flex: 1; text-align: center;">
-                <img src="${statusImage}" alt="${aqiLevel}" style="width: 80px; height: auto;">
-            </div>
-            <div style="flex: 1; text-align: left; padding-left: 10px;">
-                <p>PM10: ${obj.pm10} µg/m³</p>
-                <p>PM2.5: ${obj.pm25} µg/m³</p>
-                <p>CO: ${obj.co} µg/m³</p>
-                <p>SO2: ${obj.so2} µg/m³</p>
-                <p>NO2: ${obj.no2} µg/m³</p>
-            </div>
-            <div style="flex: 1; text-align: center;">
-                <p><img src="img/temp.png" alt="Temperature" style="width: 20px; height: auto; vertical-align: middle;"> ${obj.temperature.toFixed(1)} °C</p>
-                <p><img src="img/hum.png" alt="Humidity" style="width: 20px; height: auto; vertical-align: middle;"> ${obj.humidity.toFixed(1)} %</p>
-            </div>
-        </div>
-    `;
-    L.popup({ autoClose: false, closeOnClick: false, autoPan: false })
-        .setLatLng([lat, lng])
-        .setContent(detailContent)
-        .openOn(map);
-}
