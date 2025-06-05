@@ -1,7 +1,6 @@
 let map, marker;
 let aqiCircles = [];
 let isFirstLoad = true; // Biến để theo dõi lần tải đầu tiên
-let lastValidData = null; // Biến lưu trữ dữ liệu hợp lệ cuối cùng (có tọa độ)
 
 function initMap() {
     if (map) map.remove();
@@ -33,20 +32,20 @@ function initMap() {
 // Hàm điều chỉnh kích thước popup dựa trên mức zoom
 function adjustPopupSize(popup) {
     const zoom = map.getZoom();
-    let fontSize = 10; // Kích thước font mặc định
-    let padding = 1; // Padding mặc định
+    let fontSize = 14; // Kích thước font mặc định
+    let padding = 5; // Padding mặc định
 
     // Giảm kích thước font và padding khi zoom nhỏ
     if (zoom < 12) {
-        fontSize = 7;
-        padding = 1;
+        fontSize = 10;
+        padding = 3;
     } else if (zoom < 14) {
-        fontSize = 7;
-        padding = 1;
+        fontSize = 12;
+        padding = 4;
     }
 
     const content = popup.getContent();
-    popup.setContent(`<div style="font-size: ${fontSize}px; padding: ${padding}px;">${content}</div>`);
+    popup.setContent(`<div style="font-size: ${fontSize}px; padding: ${padding}px; cursor: pointer;" class="aqi-popup">${content}</div>`);
     popup.update(); // Cập nhật popup để áp dụng thay đổi
 }
 
@@ -107,23 +106,16 @@ function getAQIColor(level) {
 
 function fetchData() {
     fetch('/api/data')
-        .then(res => {
-            if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-            return res.json();
-        })
+        .then(res => res.json())
         .then(data => {
             if (!data || !Array.isArray(data) || data.length === 0) {
                 console.error("Không có dữ liệu hoặc dữ liệu không hợp lệ");
-                // Sử dụng dữ liệu cũ nếu có
-                if (lastValidData) {
-                    renderMapFromData(lastValidData);
-                }
                 return;
             }
 
             // Lọc dữ liệu trong 24 giờ gần nhất
             const now = new Date();
-            const oneDayAgo = new Date(now - 30 * 24 * 60 * 60 * 1000);
+            const oneDayAgo = new Date(now - 24 * 60 * 60 * 1000);
             const filteredData = data
                 .filter(item => {
                     if (!item.time || !item.object) return false;
@@ -131,59 +123,6 @@ function fetchData() {
                     return itemDate >= oneDayAgo && itemDate <= now;
                 })
                 .sort((a, b) => new Date(b.time) - new Date(a.time)); // Sắp xếp theo thời gian giảm dần
-
-            if (filteredData.length === 0) {
-                console.warn("Không có dữ liệu trong 24 giờ qua");
-                if (lastValidData) {
-                    renderMapFromData(lastValidData);
-                }
-                return;
-            }
-
-            const latestItem = filteredData[0]; // Dữ liệu mới nhất
-            const obj = latestItem.object;
-            if (!obj) {
-                console.warn("Dữ liệu thiếu object");
-                if (lastValidData) {
-                    renderMapFromData(lastValidData);
-                }
-                return;
-            }
-
-            // Kiểm tra tọa độ (xác định lỗi GPS khi cả latitude và longitude đều là 0.0)
-            let gpsError = (obj.latitude === 0.0 && obj.longitude === 0.0);
-            if (gpsError) {
-                console.warn("Dữ liệu GPS lỗi (0.0, 0.0), sử dụng dữ liệu cũ trên bản đồ");
-
-                // Hiển thị thông báo
-                let warningDiv = document.getElementById('gps-warning');
-                if (!warningDiv) {
-                    warningDiv = document.createElement('div');
-                    warningDiv.id = 'gps-warning';
-                    warningDiv.style.position = 'absolute';
-                    warningDiv.style.top = '60px';
-                    warningDiv.style.left = '50%';
-                    warningDiv.style.transform = 'translateX(-50%)';
-                    warningDiv.style.backgroundColor = 'rgba(255, 0, 0, 0.8)';
-                    warningDiv.style.color = '#fff';
-                    warningDiv.style.padding = '10px';
-                    warningDiv.style.borderRadius = '5px';
-                    warningDiv.style.zIndex = '1000';
-                    warningDiv.textContent = 'Lỗi không thể xác định được vị trí trạm quan trắc';
-                    document.getElementById('map').parentElement.appendChild(warningDiv);
-                }
-            } else {
-                // Xóa thông báo nếu có tọa độ hợp lệ
-                const warningDiv = document.getElementById('gps-warning');
-                if (warningDiv) {
-                    warningDiv.remove();
-                }
-            }
-
-            // Nếu có tọa độ hợp lệ, lưu dữ liệu này làm dữ liệu hợp lệ cuối cùng
-            if (!gpsError && obj.latitude >= -90 && obj.latitude <= 90 && obj.longitude >= -180 && obj.longitude <= 180) {
-                lastValidData = filteredData;
-            }
 
             // Lưu trạng thái popup hiện tại (vị trí nào đang mở popup)
             const openPopups = new Map();
@@ -194,146 +133,133 @@ function fetchData() {
                 }
             });
 
-            // Sử dụng dữ liệu hợp lệ (mới hoặc cũ) để vẽ bản đồ
-            const dataToRender = gpsError && lastValidData ? lastValidData : filteredData;
-            renderMapFromData(dataToRender, openPopups);
+            // Tạo danh sách các vị trí duy nhất (không trùng lặp)
+            const uniqueLocations = [];
+            const distanceThreshold = 100; // Ngưỡng khoảng cách (mét) để xác định vị trí trùng
 
-            // Cập nhật thông số cảm biến và AQI (luôn sử dụng dữ liệu mới nhất)
-            const aqiData = calculateAQIFromSensors(obj); // Tính AQI cho dữ liệu mới nhất
-            document.getElementById("temperature").textContent = obj.temperature.toFixed(1) + " °C";
-            document.getElementById("humidity").textContent = obj.humidity.toFixed(1) + " %";
-            document.getElementById("no2").textContent = obj.no2 + " µg/m³";
-            document.getElementById("so2").textContent = obj.so2 + " µg/m³";
-            document.getElementById("pm10").textContent = obj.pm10 + " µg/m³";
-            document.getElementById("pm25").textContent = obj.pm25 + " µg/m³";
-            document.getElementById("co").textContent = obj.co + " µg/m³";
-            document.getElementById("uv").textContent = obj.uv + "";
-            document.getElementById("aqi").textContent = aqiData.aqi; // Cập nhật AQI
-
-            const aqiIndicator = document.getElementById("aqiIndicator");
-            const barWidth = document.querySelector(".aqi-bar").offsetWidth;
-            const position = (aqiData.aqi / 500) * barWidth;
-            aqiIndicator.style.left = `${position}px`;
-            aqiIndicator.dataset.level = aqiData.level;
-        })
-        .catch(err => {
-            console.error("Lỗi lấy dữ liệu:", err);
-            // Sử dụng dữ liệu cũ nếu có
-            if (lastValidData) {
-                renderMapFromData(lastValidData);
-            }
-        });
-}
-
-// Hàm vẽ bản đồ từ dữ liệu (có thể là dữ liệu mới hoặc dữ liệu cũ)
-function renderMapFromData(data, openPopups = new Map()) {
-    // Tạo danh sách các vị trí duy nhất (không trùng lặp)
-    const uniqueLocations = [];
-    const distanceThreshold = 100; // Ngưỡng khoảng cách (mét) để xác định vị trí trùng
-
-    data.forEach(item => {
-        const obj = item.object;
-        if (!obj || !obj.latitude || !obj.longitude) {
-            return; // Bỏ qua nếu dữ liệu không có tọa độ
-        }
-
-        const lat = obj.latitude;
-        const lng = obj.longitude;
-        const latlng = L.latLng(lat, lng);
-
-        // Kiểm tra xem vị trí này có gần với vị trí đã có không
-        let isDuplicate = false;
-        for (let i = 0; i < uniqueLocations.length; i++) {
-            const existingItem = uniqueLocations[i];
-            const existingLatLng = L.latLng(existingItem.object.latitude, existingItem.object.longitude);
-            const distance = latlng.distanceTo(existingLatLng);
-
-            if (distance < distanceThreshold) {
-                isDuplicate = true;
-                // Giữ bản ghi mới nhất
-                if (new Date(item.time) > new Date(existingItem.time)) {
-                    uniqueLocations[i] = item;
+            filteredData.forEach(item => {
+                const obj = item.object;
+                if (!obj || !obj.latitude || !obj.longitude) {
+                    console.warn(`Dữ liệu thiếu object hoặc tọa độ`);
+                    return;
                 }
-                break;
-            }
-        }
 
-        if (!isDuplicate) {
-            uniqueLocations.push(item);
-        }
-    });
+                const lat = obj.latitude;
+                const lng = obj.longitude;
+                const latlng = L.latLng(lat, lng);
 
-    // Lưu trữ các vòng tròn hiện tại
-    const existingCircles = new Map();
-    aqiCircles.forEach(circle => {
-        const latlng = circle.getLatLng();
-        existingCircles.set(latlng.toString(), circle);
-    });
+                // Kiểm tra xem vị trí này có gần với vị trí đã có không
+                let isDuplicate = false;
+                for (let i = 0; i < uniqueLocations.length; i++) {
+                    const existingItem = uniqueLocations[i];
+                    const existingLatLng = L.latLng(existingItem.object.latitude, existingItem.object.longitude);
+                    const distance = latlng.distanceTo(existingLatLng);
 
-    // Cập nhật hoặc vẽ lại các vòng tròn
-    const newCircles = [];
-    uniqueLocations.forEach(item => {
-        const obj = item.object;
-        const lat = obj.latitude;
-        const lng = obj.longitude;
-        const latlng = L.latLng(lat, lng);
-        const aqiData = calculateAQIFromSensors(obj);
-        const aqiColor = getAQIColor(aqiData.level);
-        const latlngKey = latlng.toString();
+                    if (distance < distanceThreshold) {
+                        isDuplicate = true;
+                        // Giữ bản ghi mới nhất
+                        if (new Date(item.time) > new Date(existingItem.time)) {
+                            uniqueLocations[i] = item;
+                        }
+                        break;
+                    }
+                }
 
-        let circle = existingCircles.get(latlngKey);
-        if (circle) {
-            // Cập nhật vòng tròn hiện có
-            circle.setStyle({ fillColor: aqiColor });
-            circle.getPopup().setContent(`AQI: ${aqiData.aqi}`);
-            newCircles.push(circle);
-        } else {
-            // Tạo vòng tròn mới
-            circle = L.circle(latlng, {
-                stroke: false,
-                fillColor: aqiColor,
-                fillOpacity: 0.6,
-                radius: 60
-            }).addTo(map);
-            circle.bindPopup(`AQI: ${aqiData.aqi}`, { autoClose: false, closeOnClick: false, autoPan: false });
-            circle.on('click', function (e) {
-                this.openPopup();
+                if (!isDuplicate) {
+                    uniqueLocations.push(item);
+                }
             });
-            newCircles.push(circle);
-        }
 
-        // Mở lại popup nếu trước đó nó đang mở
-        if (openPopups.has(latlngKey)) {
-            circle.openPopup();
-        }
-    });
+            // Lưu trữ các vòng tròn hiện tại
+            const existingCircles = new Map();
+            aqiCircles.forEach(circle => {
+                const latlng = circle.getLatLng();
+                existingCircles.set(latlng.toString(), circle);
+            });
 
-    // Xóa các vòng tròn không còn trong dữ liệu
-    aqiCircles.forEach(circle => {
-        if (!newCircles.includes(circle)) {
-            map.removeLayer(circle);
-        }
-    });
-    aqiCircles = newCircles;
+            // Cập nhật hoặc vẽ lại các vòng tròn
+            const newCircles = [];
+            uniqueLocations.forEach(item => {
+                const obj = item.object;
+                const lat = obj.latitude;
+                const lng = obj.longitude;
+                const latlng = L.latLng(lat, lng);
+                const aqiData = calculateAQIFromSensors(obj);
+                const aqiColor = getAQIColor(aqiData.level);
+                const latlngKey = latlng.toString();
 
-    // Cập nhật marker cho dữ liệu mới nhất (nếu có tọa độ hợp lệ)
-    const latestItem = data[0];
-    const obj = latestItem.object;
-    if (obj.latitude !== 0.0 || obj.longitude !== 0.0) {
-        if (!marker) {
-            marker = L.marker([obj.latitude, obj.longitude]).addTo(map).bindPopup("Trạm quan trắc", { autoClose: false, closeOnClick: false });
-            marker.openPopup();
-        } else {
-            marker.setLatLng([obj.latitude, obj.longitude]);
-            marker.openPopup();
-        }
+                let circle = existingCircles.get(latlngKey);
+                if (circle) {
+                    // Cập nhật vòng tròn hiện có
+                    circle.setStyle({ fillColor: aqiColor });
+                    circle.getPopup().setContent(`<div class="aqi-popup" data-lat="${lat}" data-lng="${lng}" data-obj='${JSON.stringify(obj)}'>AQI: ${aqiData.aqi}</div>`);
+                    newCircles.push(circle);
+                } else {
+                    // Tạo vòng tròn mới
+                    circle = L.circle(latlng, {
+                        stroke: false,
+                        fillColor: aqiColor,
+                        fillOpacity: 0.6,
+                        radius: 60
+                    }).addTo(map);
+                    circle.bindPopup(`<div class="aqi-popup" data-lat="${lat}" data-lng="${lng}" data-obj='${JSON.stringify(obj)}'>AQI: ${aqiData.aqi}</div>`, { autoClose: false, closeOnClick: false, autoPan: false });
+                    circle.on('click', function (e) {
+                        this.openPopup();
+                    });
+                    newCircles.push(circle);
+                }
 
-        // Chỉ setView trong lần tải đầu tiên
-        if (isFirstLoad) {
-            map.setView([obj.latitude, obj.longitude], 15);
-            isFirstLoad = false; // Đặt lại để không setView trong các lần sau
-        }
-    }
+                // Mở lại popup nếu trước đó nó đang mở
+                if (openPopups.has(latlngKey)) {
+                    circle.openPopup();
+                }
+            });
+
+            // Xóa các vòng tròn không còn trong dữ liệu mới
+            aqiCircles.forEach(circle => {
+                if (!newCircles.includes(circle)) {
+                    map.removeLayer(circle);
+                }
+            });
+            aqiCircles = newCircles;
+
+            // Cập nhật marker và UI cho dữ liệu mới nhất
+            if (filteredData.length > 0) {
+                const latestItem = filteredData[0]; // Dữ liệu mới nhất
+                const obj = latestItem.object;
+                const aqiData = calculateAQIFromSensors(obj); // Tính AQI cho dữ liệu mới nhất
+                if (!marker) {
+                    marker = L.marker([obj.latitude, obj.longitude]).addTo(map).bindPopup("Trạm quan trắc", { autoClose: false, closeOnClick: false });
+                    marker.openPopup();
+                } else {
+                    marker.setLatLng([obj.latitude, obj.longitude]);
+                    marker.openPopup();
+                }
+
+                // Chỉ setView trong lần tải đầu tiên
+                if (isFirstLoad) {
+                    map.setView([obj.latitude, obj.longitude], 15);
+                    isFirstLoad = false; // Đặt lại để không setView trong các lần sau
+                }
+
+                document.getElementById("temperature").textContent = obj.temperature.toFixed(1) + " °C";
+                document.getElementById("humidity").textContent = obj.humidity.toFixed(1) + " %";
+                document.getElementById("no2").textContent = obj.no2 + " µg/m³";
+                document.getElementById("so2").textContent = obj.so2 + " µg/m³";
+                document.getElementById("pm10").textContent = obj.pm10 + " µg/m³";
+                document.getElementById("pm25").textContent = obj.pm25 + " µg/m³";
+                document.getElementById("co").textContent = obj.co + " µg/m³";
+                document.getElementById("uv").textContent = obj.uv + "";
+                document.getElementById("aqi").textContent = aqiData.aqi; // Cập nhật AQI
+
+                const aqiIndicator = document.getElementById("aqiIndicator");
+                const barWidth = document.querySelector(".aqi-bar").offsetWidth;
+                const position = (aqiData.aqi / 500) * barWidth;
+                aqiIndicator.style.left = `${position}px`;
+                aqiIndicator.dataset.level = aqiData.level;
+            }
+        })
+        .catch(err => console.error("Lỗi lấy dữ liệu:", err));
 }
 
 // ================ UI ================
@@ -369,4 +295,69 @@ function openTab(evt, tabName) {
 document.addEventListener('DOMContentLoaded', function () {
     document.querySelector('.tablink').click();
     setInterval(fetchData, 5000);
+
+    // Thêm sự kiện click cho popup AQI để mở popup chi tiết
+    map.on('popupopen', function (e) {
+        const popupContent = e.popup.getElement();
+        const aqiPopup = popupContent.querySelector('.aqi-popup');
+        if (aqiPopup) {
+            aqiPopup.addEventListener('click', function (event) {
+                event.stopPropagation(); // Ngăn sự kiện lan ra ngoài
+                const lat = parseFloat(aqiPopup.dataset.lat);
+                const lng = parseFloat(aqiPopup.dataset.lng);
+                const obj = JSON.parse(aqiPopup.dataset.obj);
+                openDetailPopup(lat, lng, obj);
+            });
+        }
+    });
 });
+
+// Hàm mở popup chi tiết với thiết kế mới
+function openDetailPopup(lat, lng, obj) {
+    const aqiData = calculateAQIFromSensors(obj);
+    const aqiLevel = getAQILevel(aqiData.aqi);
+    const statusText = {
+        'good': 'Tốt',
+        'moderate': 'Trung bình',
+        'unhealthy-for-sensitive': 'Kém',
+        'unhealthy': 'Xấu',
+        'very-unhealthy': 'Rất xấu',
+        'hazardous': 'Nguy hại'
+    }[aqiLevel] || 'Không xác định';
+    const statusImage = {
+        'good': 'img/good.svg',
+        'moderate': 'img/moderate.svg',
+        'unhealthy-for-sensitive': 'img/poor.svg',
+        'unhealthy': 'img/unhealthy.svg',
+        'very-unhealthy': 'img/severa.svg',
+        'hazardous': 'img/hazardous.svg'
+    }[aqiLevel] || 'img/good.svg';
+
+    const detailContent = `
+        <div style="display: flex; flex-direction: row; background-color: ${getAQIColor(aqiLevel)}; padding: 10px; color: #000; border-radius: 5px; min-width: 250px;">
+            <div style="flex: 1; text-align: center;">
+                <h3 style="margin: 0;">AQI</h3>
+                <p style="font-size: 24px; margin: 5px 0;">${aqiData.aqi}</p>
+                <div style="background-color: #90ee90; padding: 5px 10px; border-radius: 5px; display: inline-block;">${statusText}</div>
+            </div>
+            <div style="flex: 1; text-align: center;">
+                <img src="${statusImage}" alt="${aqiLevel}" style="width: 80px; height: auto;">
+            </div>
+            <div style="flex: 1; text-align: left; padding-left: 10px;">
+                <p>PM10: ${obj.pm10} µg/m³</p>
+                <p>PM2.5: ${obj.pm25} µg/m³</p>
+                <p>CO: ${obj.co} µg/m³</p>
+                <p>SO2: ${obj.so2} µg/m³</p>
+                <p>NO2: ${obj.no2} µg/m³</p>
+            </div>
+            <div style="flex: 1; text-align: center;">
+                <p><img src="img/temp.png" alt="Temperature" style="width: 20px; height: auto; vertical-align: middle;"> ${obj.temperature.toFixed(1)} °C</p>
+                <p><img src="img/hum.png" alt="Humidity" style="width: 20px; height: auto; vertical-align: middle;"> ${obj.humidity.toFixed(1)} %</p>
+            </div>
+        </div>
+    `;
+    L.popup({ autoClose: false, closeOnClick: false, autoPan: false })
+        .setLatLng([lat, lng])
+        .setContent(detailContent)
+        .openOn(map);
+}
