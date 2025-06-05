@@ -285,7 +285,7 @@ function renderMapFromData(data, openPopups = new Map()) {
         if (circle) {
             // Cập nhật vòng tròn hiện có
             circle.setStyle({ fillColor: aqiColor });
-            circle.getPopup().setContent(`AQI: ${aqiData.aqi} (${aqiData.level})`);
+            circle.getPopup().setContent(`AQI: ${aqiData.aqi}`);
             newCircles.push(circle);
         } else {
             // Tạo vòng tròn mới
@@ -295,7 +295,7 @@ function renderMapFromData(data, openPopups = new Map()) {
                 fillOpacity: 0.6,
                 radius: 60
             }).addTo(map);
-            circle.bindPopup(`AQI: ${aqiData.aqi} (${aqiData.level})`, { autoClose: false, closeOnClick: false, autoPan: false });
+            circle.bindPopup(`AQI: ${aqiData.aqi}`, { autoClose: false, closeOnClick: false, autoPan: false });
             circle.on('click', function (e) {
                 this.openPopup();
             });
