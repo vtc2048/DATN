@@ -80,7 +80,7 @@ function showDetailModal(circle) {
         </div>
     `;
 
-    modal.style.display = 'flex';
+    modal.style.display = 'flex'; // Luôn hiển thị modal khi gọi hàm
 
     // Xử lý đóng modal
     const closeBtn = modal.querySelector('.close-btn');
@@ -344,13 +344,14 @@ function renderMapFromData(data, openPopups = new Map()) {
         if (circle) {
             // Cập nhật vòng tròn hiện có
             circle.setStyle({ fillColor: aqiColor });
-            circle.getPopup().setContent(`
+            const popupContent = `
                 <div>
                     AQI: ${aqiData.aqi}<br>
-                    <button onclick="showDetailModal(aqiCircles[${aqiCircles.length}])">Chi tiết</button>
+                    <button class="detail-btn">Chi tiết</button>
                 </div>
-            `);
-            circle.sensorData = sensorData; // Lưu trữ dữ liệu cảm biến
+            `;
+            circle.getPopup().setContent(popupContent);
+            circle.sensorData = sensorData; // Cập nhật dữ liệu cảm biến
             newCircles.push(circle);
         } else {
             // Tạo vòng tròn mới
@@ -360,18 +361,31 @@ function renderMapFromData(data, openPopups = new Map()) {
                 fillOpacity: 0.6,
                 radius: 60
             }).addTo(map);
-            circle.bindPopup(`
+            const popupContent = `
                 <div>
                     AQI: ${aqiData.aqi}<br>
-                    <button onclick="showDetailModal(aqiCircles[${newCircles.length}])">Chi tiết</button>
+                    <button class="detail-btn">Chi tiết</button>
                 </div>
-            `, { autoClose: false, closeOnClick: false, autoPan: false });
+            `;
+            circle.bindPopup(popupContent, { autoClose: false, closeOnClick: false, autoPan: false });
             circle.on('click', function (e) {
                 this.openPopup();
             });
             circle.sensorData = sensorData; // Lưu trữ dữ liệu cảm biến
             newCircles.push(circle);
         }
+
+        // Gắn sự kiện cho nút "Chi tiết"
+        const popup = circle.getPopup();
+        popup.on('contentupdate', function () {
+            const detailBtn = popup.getElement().querySelector('.detail-btn');
+            if (detailBtn) {
+                detailBtn.onclick = (e) => {
+                    e.stopPropagation(); // Ngăn chặn sự kiện lan ra ngoài
+                    showDetailModal(circle);
+                };
+            }
+        });
 
         // Mở lại popup nếu trước đó nó đang mở
         if (openPopups.has(latlngKey)) {
