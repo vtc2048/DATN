@@ -50,6 +50,49 @@ function adjustPopupSize(popup) {
     popup.update(); // Cập nhật popup để áp dụng thay đổi
 }
 
+// Hàm hiển thị modal chi tiết
+function showDetailModal(sensorData) {
+    let modal = document.getElementById('detailModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'detailModal';
+        modal.className = 'modal';
+        modal.innerHTML = `
+            <div class="modal-content">
+                <span class="close-btn">&times;</span>
+                <h2>Chi tiết thông số không khí</h2>
+                <div class="sensor-details">
+                    <div class="sensor-detail"><span>AQI:</span><span>${sensorData.aqi}</span></div>
+                    <div class="sensor-detail"><span>Nhiệt độ:</span><span>${sensorData.temperature.toFixed(1)} °C</span></div>
+                    <div class="sensor-detail"><span>Độ ẩm:</span><span>${sensorData.humidity.toFixed(1)} %</span></div>
+                    <div class="sensor-detail"><span>NO2:</span><span>${sensorData.no2} µg/m³</span></div>
+                    <div class="sensor-detail"><span>SO2:</span><span>${sensorData.so2} µg/m³</span></div>
+                    <div class="sensor-detail"><span>PM10:</span><span>${sensorData.pm10} µg/m³</span></div>
+                    <div class="sensor-detail"><span>PM2.5:</span><span>${sensorData.pm25} µg/m³</span></div>
+                    <div class="sensor-detail"><span>CO:</span><span>${sensorData.co} µg/m³</span></div>
+                    <div class="sensor-detail"><span>UV:</span><span>${sensorData.uv} mW/cm²</span></div>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+    }
+
+    modal.style.display = 'flex';
+
+    // Xử lý đóng modal
+    const closeBtn = modal.querySelector('.close-btn');
+    closeBtn.onclick = () => {
+        modal.style.display = 'none';
+    };
+
+    // Đóng modal khi nhấp ra ngoài
+    modal.onclick = (e) => {
+        if (e.target === modal) {
+            modal.style.display = 'none';
+        }
+    };
+}
+
 // ================== AQI LOGIC ===================
 
 const VN_AQI_BREAKPOINTS = {
@@ -281,11 +324,30 @@ function renderMapFromData(data, openPopups = new Map()) {
         const aqiColor = getAQIColor(aqiData.level);
         const latlngKey = latlng.toString();
 
+        // Lưu trữ dữ liệu cảm biến cho vòng tròn
+        const sensorData = {
+            aqi: aqiData.aqi,
+            temperature: obj.temperature,
+            humidity: obj.humidity,
+            no2: obj.no2,
+            so2: obj.so2,
+            pm10: obj.pm10,
+            pm25: obj.pm25,
+            co: obj.co,
+            uv: obj.uv
+        };
+
         let circle = existingCircles.get(latlngKey);
         if (circle) {
             // Cập nhật vòng tròn hiện có
             circle.setStyle({ fillColor: aqiColor });
-            circle.getPopup().setContent(`AQI: ${aqiData.aqi}`);
+            circle.getPopup().setContent(`
+                <div>
+                    AQI: ${aqiData.aqi}<br>
+                    <button onclick="showDetailModal(${JSON.stringify(sensorData).replace(/"/g, '&quot;')})">Chi tiết</button>
+                </div>
+            `);
+            circle.sensorData = sensorData; // Lưu trữ dữ liệu cảm biến
             newCircles.push(circle);
         } else {
             // Tạo vòng tròn mới
@@ -295,10 +357,16 @@ function renderMapFromData(data, openPopups = new Map()) {
                 fillOpacity: 0.6,
                 radius: 60
             }).addTo(map);
-            circle.bindPopup(`AQI: ${aqiData.aqi}`, { autoClose: false, closeOnClick: false, autoPan: false });
+            circle.bindPopup(`
+                <div>
+                    AQI: ${aqiData.aqi}<br>
+                    <button onclick="showDetailModal(${JSON.stringify(sensorData).replace(/"/g, '&quot;')})">Chi tiết</button>
+                </div>
+            `, { autoClose: false, closeOnClick: false, autoPan: false });
             circle.on('click', function (e) {
                 this.openPopup();
             });
+            circle.sensorData = sensorData; // Lưu trữ dữ liệu cảm biến
             newCircles.push(circle);
         }
 
