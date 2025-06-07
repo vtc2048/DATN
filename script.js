@@ -53,6 +53,8 @@ function adjustPopupSize(popup) {
 // Hàm hiển thị modal chi tiết
 function showDetailModal(circle) {
     const sensorData = circle.sensorData; // Lấy dữ liệu cảm biến từ vòng tròn
+    const aqiLevel = getAQILevel(sensorData.aqi); // Lấy mức AQI
+    const aqiColor = getAQIColor(aqiLevel); // Lấy màu nền dựa trên mức AQI
 
     let modal = document.getElementById('detailModal');
     if (!modal) {
@@ -62,25 +64,48 @@ function showDetailModal(circle) {
         document.body.appendChild(modal);
     }
 
+    // Đường dẫn hình ảnh trạng thái AQI
+    const aqiImageMap = {
+        good: 'img/good.svg',
+        moderate: 'img/moderate.svg',
+        poor: 'img/poor.svg',
+        unhealthy: 'img/unhealthy.svg',
+        severe: 'img/severe.svg',
+        hazardous: 'img/hazardous.svg'
+    };
+    const aqiImage = aqiImageMap[aqiLevel] || 'img/good.svg';
+
+    // Đường dẫn icon nhiệt độ và độ ẩm
+    const tempIcon = 'img/temp.png';
+    const humIcon = 'img/hum.png';
+
     modal.innerHTML = `
-        <div class="modal-content">
+        <div class="modal-content" style="background-color: ${aqiColor};">
             <span class="close-btn">×</span>
-            <h2>Chi tiết thông số không khí</h2>
-            <div class="sensor-details">
-                <div class="sensor-detail"><span>AQI:</span><span>${sensorData.aqi}</span></div>
-                <div class="sensor-detail"><span>Nhiệt độ:</span><span>${sensorData.temperature.toFixed(1)} °C</span></div>
-                <div class="sensor-detail"><span>Độ ẩm:</span><span>${sensorData.humidity.toFixed(1)} %</span></div>
-                <div class="sensor-detail"><span>NO2:</span><span>${sensorData.no2} µg/m³</span></div>
-                <div class="sensor-detail"><span>SO2:</span><span>${sensorData.so2} µg/m³</span></div>
-                <div class="sensor-detail"><span>PM10:</span><span>${sensorData.pm10} µg/m³</span></div>
-                <div class="sensor-detail"><span>PM2.5:</span><span>${sensorData.pm25} µg/m³</span></div>
-                <div class="sensor-detail"><span>CO:</span><span>${sensorData.co} µg/m³</span></div>
-                <div class="sensor-detail"><span>UV:</span><span>${sensorData.uv} mW/cm²</span></div>
+            <div class="content-wrapper">
+                <div class="left-section">
+                    <p class="aqi-value">${sensorData.aqi}</p>
+                    <div class="aqi-status">${aqiLevel.toUpperCase()}</div>
+                </div>
+                <div class="center-section">
+                    <img src="${aqiImage}" alt="${aqiLevel} status">
+                </div>
+                <div class="right-section">
+                    <div class="pollutant-item"><span>PM10:</span><span>${sensorData.pm10} µg/m³</span></div>
+                    <div class="pollutant-item"><span>PM2.5:</span><span>${sensorData.pm25} µg/m³</span></div>
+                    <div class="pollutant-item"><span>CO:</span><span>${sensorData.co} µg/m³</span></div>
+                    <div class="pollutant-item"><span>SO2:</span><span>${sensorData.so2} µg/m³</span></div>
+                    <div class="pollutant-item"><span>NO2:</span><span>${sensorData.no2} µg/m³</span></div>
+                </div>
+            </div>
+            <div class="bottom-section">
+                <div class="temp-item"><img src="${tempIcon}" alt="Temperature"><span>${sensorData.temperature.toFixed(1)} °C</span></div>
+                <div class="hum-item"><img src="${humIcon}" alt="Humidity"><span>${sensorData.humidity.toFixed(1)} %</span></div>
             </div>
         </div>
     `;
 
-    modal.style.display = 'flex'; // Luôn hiển thị modal khi gọi hàm
+    modal.style.display = 'flex';
 
     // Xử lý đóng modal
     const closeBtn = modal.querySelector('.close-btn');
@@ -213,7 +238,7 @@ function fetchData() {
                     warningDiv.style.backgroundColor = 'rgba(255, 0, 0, 0.8)';
                     warningDiv.style.color = '#fff';
                     warningDiv.style.padding = '10px';
-                    warningDiv.style.borderRadius = '5px';
+                    warningDiv.style.border-radius = '5px';
                     warningDiv.style.zIndex = '1000';
                     warningDiv.textContent = 'Lỗi không thể xác định được vị trí trạm quan trắc';
                     document.getElementById('map').parentElement.appendChild(warningDiv);
