@@ -51,31 +51,34 @@ function adjustPopupSize(popup) {
 }
 
 // Hàm hiển thị modal chi tiết
-function showDetailModal(sensorData) {
+function showDetailModal(circle) {
+    const sensorData = circle.sensorData; // Lấy dữ liệu cảm biến từ vòng tròn
+
     let modal = document.getElementById('detailModal');
     if (!modal) {
         modal = document.createElement('div');
         modal.id = 'detailModal';
         modal.className = 'modal';
-        modal.innerHTML = `
-            <div class="modal-content">
-                <span class="close-btn">&times;</span>
-                <h2>Chi tiết thông số không khí</h2>
-                <div class="sensor-details">
-                    <div class="sensor-detail"><span>AQI:</span><span>${sensorData.aqi}</span></div>
-                    <div class="sensor-detail"><span>Nhiệt độ:</span><span>${sensorData.temperature.toFixed(1)} °C</span></div>
-                    <div class="sensor-detail"><span>Độ ẩm:</span><span>${sensorData.humidity.toFixed(1)} %</span></div>
-                    <div class="sensor-detail"><span>NO2:</span><span>${sensorData.no2} µg/m³</span></div>
-                    <div class="sensor-detail"><span>SO2:</span><span>${sensorData.so2} µg/m³</span></div>
-                    <div class="sensor-detail"><span>PM10:</span><span>${sensorData.pm10} µg/m³</span></div>
-                    <div class="sensor-detail"><span>PM2.5:</span><span>${sensorData.pm25} µg/m³</span></div>
-                    <div class="sensor-detail"><span>CO:</span><span>${sensorData.co} µg/m³</span></div>
-                    <div class="sensor-detail"><span>UV:</span><span>${sensorData.uv} mW/cm²</span></div>
-                </div>
-            </div>
-        `;
         document.body.appendChild(modal);
     }
+
+    modal.innerHTML = `
+        <div class="modal-content">
+            <span class="close-btn">×</span>
+            <h2>Chi tiết thông số không khí</h2>
+            <div class="sensor-details">
+                <div class="sensor-detail"><span>AQI:</span><span>${sensorData.aqi}</span></div>
+                <div class="sensor-detail"><span>Nhiệt độ:</span><span>${sensorData.temperature.toFixed(1)} °C</span></div>
+                <div class="sensor-detail"><span>Độ ẩm:</span><span>${sensorData.humidity.toFixed(1)} %</span></div>
+                <div class="sensor-detail"><span>NO2:</span><span>${sensorData.no2} µg/m³</span></div>
+                <div class="sensor-detail"><span>SO2:</span><span>${sensorData.so2} µg/m³</span></div>
+                <div class="sensor-detail"><span>PM10:</span><span>${sensorData.pm10} µg/m³</span></div>
+                <div class="sensor-detail"><span>PM2.5:</span><span>${sensorData.pm25} µg/m³</span></div>
+                <div class="sensor-detail"><span>CO:</span><span>${sensorData.co} µg/m³</span></div>
+                <div class="sensor-detail"><span>UV:</span><span>${sensorData.uv} mW/cm²</span></div>
+            </div>
+        </div>
+    `;
 
     modal.style.display = 'flex';
 
@@ -164,7 +167,7 @@ function fetchData() {
                 return;
             }
 
-            // Lọc dữ liệu trong 24 giờ gần nhất
+            // Lọc dữ liệu trong 30 ngày gần nhất
             const now = new Date();
             const oneDayAgo = new Date(now - 30 * 24 * 60 * 60 * 1000);
             const filteredData = data
@@ -176,7 +179,7 @@ function fetchData() {
                 .sort((a, b) => new Date(b.time) - new Date(a.time)); // Sắp xếp theo thời gian giảm dần
 
             if (filteredData.length === 0) {
-                console.warn("Không có dữ liệu trong 24 giờ qua");
+                console.warn("Không có dữ liệu trong 30 ngày qua");
                 if (lastValidData) {
                     renderMapFromData(lastValidData);
                 }
@@ -344,7 +347,7 @@ function renderMapFromData(data, openPopups = new Map()) {
             circle.getPopup().setContent(`
                 <div>
                     AQI: ${aqiData.aqi}<br>
-                    <button onclick="showDetailModal(${JSON.stringify(sensorData).replace(/"/g, '&quot;')})">Chi tiết</button>
+                    <button onclick="showDetailModal(aqiCircles[${aqiCircles.length}])">Chi tiết</button>
                 </div>
             `);
             circle.sensorData = sensorData; // Lưu trữ dữ liệu cảm biến
@@ -360,7 +363,7 @@ function renderMapFromData(data, openPopups = new Map()) {
             circle.bindPopup(`
                 <div>
                     AQI: ${aqiData.aqi}<br>
-                    <button onclick="showDetailModal(${JSON.stringify(sensorData).replace(/"/g, '&quot;')})">Chi tiết</button>
+                    <button onclick="showDetailModal(aqiCircles[${newCircles.length}])">Chi tiết</button>
                 </div>
             `, { autoClose: false, closeOnClick: false, autoPan: false });
             circle.on('click', function (e) {
