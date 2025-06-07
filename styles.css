@@ -467,3 +467,76 @@ body {
         font-size: 0.9em;
     }
 }
+
+.modal-content.good     { background-color: #b6f3b6; }
+.modal-content.moderate { background-color: #fff9b6; }
+.modal-content.poor     { background-color: #ffd9a6; }
+.modal-content.unhealthy{ background-color: #ffb6b6; }
+.modal-content.severe   { background-color: #e2a6cc; }
+.modal-content.hazardous{ background-color: #d6a6b6; }
+
+.modal-aqi-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+}
+
+.modal-aqi-left {
+    flex: 1;
+    text-align: center;
+}
+
+.aqi-value {
+    font-size: 3em;
+    font-weight: bold;
+    color: #000;
+}
+
+.aqi-status {
+    font-size: 1.2em;
+    padding: 6px 12px;
+    background-color: rgba(255,255,255,0.7);
+    border-radius: 6px;
+    display: inline-block;
+    margin-top: 5px;
+}
+
+.modal-aqi-center {
+    flex: 1;
+    text-align: center;
+}
+
+.aqi-image {
+    width: 100px;
+    height: auto;
+}
+
+.modal-aqi-right {
+    flex: 1;
+    font-size: 1em;
+    color: #000;
+}
+
+.modal-aqi-right p {
+    margin: 6px 0;
+}
+
+.modal-bottom {
+    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+}
+
+.temp-hum {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1.1em;
+}
+
+.icon-small {
+    width: 30px;
+    height: 30px;
+}
