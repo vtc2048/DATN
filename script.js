@@ -72,39 +72,41 @@ function showDetailModal(circle) {
         document.body.appendChild(modal);
     }
 
-    const content = [
-        '<div class="modal-content" style="background-color: ' + aqiColor + '">',
-        '<span class="close-btn">×</span>',
-        '<div class="content-wrapper">',
-        '<div class="left-section">',
-        '<p class="aqi-value">' + (sensorData.aqi || 0) + '</p>',
-        '<div class="aqi-status">' + (aqiLevel ? aqiLevel.toUpperCase() : 'GOOD') + '</div>',
-        '</div>',
-        '<div class="center-section">',
-        '<img src="' + aqiImage + '" alt="' + (aqiLevel || 'good') + ' status" onerror="this.src=\'img/good.svg\';">',
-        '</div>',
-        '<div class="right-section">',
-        '<div class="pollutant-item"><span>PM10:</span><span>' + (sensorData.pm10 || 0) + ' µg/m³</span></div>',
-        '<div class="pollutant-item"><span>PM2.5:</span><span>' + (sensorData.pm25 || 0) + ' µg/m³</span></div>',
-        '<div class="pollutant-item"><span>CO:</span><span>' + (sensorData.co || 0) + ' µg/m³</span></div>',
-        '<div class="pollutant-item"><span>SO2:</span><span>' + (sensorData.so2 || 0) + ' µg/m³</span></div>',
-        '<div class="pollutant-item"><span>NO2:</span><span>' + (sensorData.no2 || 0) + ' µg/m³</span></div>',
-        '</div>',
-        '</div>',
-        '<div class="bottom-section">',
-        '<div class="temp-item"><img src="' + tempIcon + '" alt="Temperature" onerror="this.src=\'img/temp.png\';"><span>' + ((sensorData.temperature || 0).toFixed(1)) + ' °C</span></div>',
-        '<div class="hum-item"><img src="' + humIcon + '" alt="Humidity" onerror="this.src=\'img/hum.png\';"><span>' + ((sensorData.humidity || 0).toFixed(1)) + ' %</span></div>',
-        '</div>',
-        '</div>'
-    ].join('');
+    // Sử dụng chuỗi đơn giản để tránh lỗi cú pháp
+    modal.innerHTML = `
+        <div class="modal-content" style="background-color: ${aqiColor}">
+            <span class="close-btn">×</span>
+            <div class="content-wrapper">
+                <div class="left-section">
+                    <p class="aqi-value">${sensorData.aqi || 0}</p>
+                    <div class="aqi-status">${(aqiLevel || 'good').toUpperCase()}</div>
+                </div>
+                <div class="center-section">
+                    <img src="${aqiImage}" alt="${(aqiLevel || 'good')} status" onerror="this.src='img/good.svg';">
+                </div>
+                <div class="right-section">
+                    <div class="pollutant-item"><span>PM10:</span><span>${sensorData.pm10 || 0} µg/m³</span></div>
+                    <div class="pollutant-item"><span>PM2.5:</span><span>${sensorData.pm25 || 0} µg/m³</span></div>
+                    <div class="pollutant-item"><span>CO:</span><span>${sensorData.co || 0} µg/m³</span></div>
+                    <div class="pollutant-item"><span>SO2:</span><span>${sensorData.so2 || 0} µg/m³</span></div>
+                    <div class="pollutant-item"><span>NO2:</span><span>${sensorData.no2 || 0} µg/m³</span></div>
+                </div>
+            </div>
+            <div class="bottom-section">
+                <div class="temp-item"><img src="${tempIcon}" alt="Temperature" onerror="this.src='img/temp.png';"><span>${(sensorData.temperature || 0).toFixed(1)} °C</span></div>
+                <div class="hum-item"><img src="${humIcon}" alt="Humidity" onerror="this.src='img/hum.png';"><span>${(sensorData.humidity || 0).toFixed(1)} %</span></div>
+            </div>
+        </div>
+    `;
 
-    modal.innerHTML = content;
     modal.style.display = 'flex';
 
     const closeBtn = modal.querySelector('.close-btn');
-    closeBtn.onclick = () => {
-        modal.style.display = 'none';
-    };
+    if (closeBtn) {
+        closeBtn.onclick = () => {
+            modal.style.display = 'none';
+        };
+    }
 
     modal.onclick = (e) => {
         if (e.target === modal) {
