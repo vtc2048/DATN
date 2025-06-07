@@ -114,9 +114,9 @@ body {
 
 .aqi-segment.good { background: #00e400; }
 .aqi-segment.moderate { background: #ffff00; }
-.aqi-segment.unhealthy-for-sensitive { background: #ff7e00; }
+.aqi-segment.poor { background: #ff7e00; }
 .aqi-segment.unhealthy { background: #ff0000; }
-.aqi-segment.very-unhealthy { background: #99004c; }
+.aqi-segment.severe { background: #99004c; }
 .aqi-segment.hazardous { background: #7e0023; }
 
 .aqi-icon {
@@ -129,9 +129,9 @@ body {
 
 .aqi-icon.good { background-image: url('https://img.icons8.com/emoji/40/000000/grinning-face.png'); }
 .aqi-icon.moderate { background-image: url('https://img.icons8.com/emoji/40/000000/neutral-face.png'); }
-.aqi-icon.unhealthy-for-sensitive { background-image: url('https://img.icons8.com/emoji/40/000000/confused-face.png'); }
+.aqi-icon.poor { background-image: url('https://img.icons8.com/emoji/40/000000/confused-face.png'); }
 .aqi-icon.unhealthy { background-image: url('https://img.icons8.com/emoji/40/000000/worried-face.png'); }
-.aqi-icon.very-unhealthy { background-image: url('https://img.icons8.com/emoji/40/000000/face-with-medical-mask.png'); }
+.aqi-icon.severe { background-image: url('https://img.icons8.com/emoji/40/000000/face-with-medical-mask.png'); }
 .aqi-icon.hazardous { background-image: url('https://img.icons8.com/emoji/40/000000/skull.png'); }
 
 .aqi-indicator {
