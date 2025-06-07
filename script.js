@@ -392,15 +392,19 @@ function renderMapFromData(data, openPopups = new Map()) {
         }
 
         // Gắn sự kiện cho nút "Chi tiết"
-        const popup = circle.getPopup();
-        popup.on('contentupdate', function () {
-            const detailBtn = popup.getElement().querySelector('.detail-btn');
-            if (detailBtn) {
-                detailBtn.onclick = (e) => {
-                    e.stopPropagation(); // Ngăn chặn sự kiện lan ra ngoài
-                    showDetailModal(circle);
-                };
-            }
+        popup.on('add', function () {
+            setTimeout(() => {
+                const popupEl = popup.getElement();
+                if (popupEl) {
+                    const detailBtn = popupEl.querySelector('.detail-btn');
+                    if (detailBtn) {
+                        detailBtn.onclick = (e) => {
+                            e.stopPropagation();
+                            showDetailModal(circle);
+                        };
+                    }
+                }
+            }, 100);
         });
 
         // Mở lại popup nếu trước đó nó đang mở
