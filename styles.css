@@ -313,7 +313,7 @@ body {
     color: #2c3e50;
 }
 
-/* Modal styles - Cải tiến giao diện */
+/* Modal styles - Thiết kế mới theo yêu cầu */
 .modal {
     display: none;
     position: fixed;
@@ -322,22 +322,23 @@ body {
     top: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.6); /* Nền mờ đậm hơn */
+    background-color: rgba(0, 0, 0, 0.6);
     justify-content: center;
     align-items: center;
-    backdrop-filter: blur(2px); /* Hiệu ứng mờ nhẹ cho nền */
 }
 
 .modal-content {
-    background-color: #ffffff;
-    padding: 25px;
-    border-radius: 15px; /* Bo góc mềm mại hơn */
+    background-color: #00e400; /* Màu nền trùng với vòng tròn AQI (good) */
+    padding: 20px;
+    border-radius: 10px;
     width: 90%;
-    max-width: 550px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2); /* Bóng đổ đẹp hơn */
-    background: linear-gradient(135deg, #f9f9f9, #e0f7fa); /* Gradient nền */
-    border: 1px solid #ddd; /* Thêm viền nhẹ */
-    animation: slideIn 0.4s ease-out; /* Hiệu ứng mở mượt mà hơn */
+    max-width: 600px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    animation: slideIn 0.3s ease;
 }
 
 @keyframes slideIn {
@@ -345,61 +346,94 @@ body {
     to { transform: translateY(0); opacity: 1; }
 }
 
-.modal-content h2 {
-    margin-top: 0;
-    color: #2c3e50;
-    text-align: center;
-    font-size: 1.5em;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-}
-
-.modal-content .sensor-details {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    margin-top: 15px;
-}
-
-.modal-content .sensor-detail {
+.modal-content .content-wrapper {
     display: flex;
     justify-content: space-between;
-    padding: 10px 15px;
+    width: 100%;
+    margin-top: 10px;
+}
+
+.modal-content .left-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 30%;
+}
+
+.modal-content .left-section .aqi-value {
+    font-size: 2.5em;
+    font-weight: bold;
+    color: #fff;
+    margin: 0;
+}
+
+.modal-content .left-section .aqi-status {
     background-color: #fff;
-    border-radius: 8px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Bóng cho từng dòng */
-    transition: transform 0.2s;
-}
-
-.modal-content .sensor-detail:hover {
-    transform: translateY(-2px); /* Hiệu ứng khi hover */
-}
-
-.modal-content .sensor-detail span {
+    padding: 5px 15px;
+    border-radius: 5px;
+    margin-top: 5px;
     font-size: 1.1em;
     color: #2c3e50;
-    font-weight: 500;
+    font-weight: 600;
 }
 
-.modal-content .sensor-detail span:last-child {
-    color: #e74c3c; /* Màu giá trị nổi bật */
-    font-weight: 600;
+.modal-content .center-section {
+    width: 30%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content .center-section img {
+    max-width: 100%;
+    height: auto;
+}
+
+.modal-content .right-section {
+    width: 30%;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.modal-content .right-section .pollutant-item {
+    display: flex;
+    justify-content: space-between;
+    color: #fff;
+    font-size: 1em;
+}
+
+.modal-content .bottom-section {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    margin-top: 15px;
+    color: #fff;
+}
+
+.modal-content .bottom-section .temp-item,
+.modal-content .bottom-section .hum-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.modal-content .bottom-section img {
+    width: 20px;
+    height: 20px;
 }
 
 .close-btn {
     position: absolute;
-    top: 15px;
-    right: 20px;
-    font-size: 1.8em;
+    top: 10px;
+    right: 15px;
+    font-size: 1.5em;
     cursor: pointer;
-    color: #e74c3c; /* Màu đỏ cho nút đóng */
-    transition: color 0.3s, transform 0.3s;
+    color: #fff;
 }
 
 .close-btn:hover {
-    color: #c0392b; /* Màu đậm hơn khi hover */
-    transform: rotate(90deg); /* Xoay nút khi hover */
+    color: #e74c3c;
 }
 
 @media (max-width: 768px) {
@@ -445,15 +479,25 @@ body {
     .modal-content {
         width: 95%;
         max-width: 400px;
-        padding: 20px;
+        padding: 15px;
     }
 
-    .modal-content .sensor-detail {
-        padding: 8px 12px;
+    .modal-content .content-wrapper {
+        flex-direction: column;
+        align-items: center;
     }
 
-    .modal-content h2 {
-        font-size: 1.3em;
+    .modal-content .left-section,
+    .modal-content .center-section,
+    .modal-content .right-section {
+        width: 100%;
+        margin-bottom: 10px;
+    }
+
+    .modal-content .bottom-section {
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
     }
 }
 
@@ -491,14 +535,18 @@ body {
 
     .modal-content {
         width: 90%;
-        padding: 15px;
+        padding: 10px;
     }
 
-    .modal-content .sensor-detail span {
+    .modal-content .aqi-value {
+        font-size: 2em;
+    }
+
+    .modal-content .aqi-status {
         font-size: 1em;
     }
 
-    .close-btn {
-        font-size: 1.5em;
+    .modal-content .right-section .pollutant-item {
+        font-size: 0.9em;
     }
 }
