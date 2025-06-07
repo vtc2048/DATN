@@ -313,7 +313,7 @@ body {
     color: #2c3e50;
 }
 
-/* Modal styles */
+/* Modal styles - Cải tiến giao diện */
 .modal {
     display: none;
     position: fixed;
@@ -322,20 +322,22 @@ body {
     top: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
+    background-color: rgba(0, 0, 0, 0.6); /* Nền mờ đậm hơn */
     justify-content: center;
     align-items: center;
+    backdrop-filter: blur(2px); /* Hiệu ứng mờ nhẹ cho nền */
 }
 
 .modal-content {
-    background-color: #fff;
-    padding: 20px;
-    border-radius: 10px;
+    background-color: #ffffff;
+    padding: 25px;
+    border-radius: 15px; /* Bo góc mềm mại hơn */
     width: 90%;
-    max-width: 500px;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-    position: relative;
-    animation: slideIn 0.3s ease;
+    max-width: 550px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2); /* Bóng đổ đẹp hơn */
+    background: linear-gradient(135deg, #f9f9f9, #e0f7fa); /* Gradient nền */
+    border: 1px solid #ddd; /* Thêm viền nhẹ */
+    animation: slideIn 0.4s ease-out; /* Hiệu ứng mở mượt mà hơn */
 }
 
 @keyframes slideIn {
@@ -347,37 +349,57 @@ body {
     margin-top: 0;
     color: #2c3e50;
     text-align: center;
+    font-size: 1.5em;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
 }
 
 .modal-content .sensor-details {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 12px;
+    margin-top: 15px;
 }
 
 .modal-content .sensor-detail {
     display: flex;
     justify-content: space-between;
-    padding: 8px;
-    border-bottom: 1px solid #ddd;
+    padding: 10px 15px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Bóng cho từng dòng */
+    transition: transform 0.2s;
+}
+
+.modal-content .sensor-detail:hover {
+    transform: translateY(-2px); /* Hiệu ứng khi hover */
 }
 
 .modal-content .sensor-detail span {
-    font-size: 1em;
+    font-size: 1.1em;
     color: #2c3e50;
+    font-weight: 500;
+}
+
+.modal-content .sensor-detail span:last-child {
+    color: #e74c3c; /* Màu giá trị nổi bật */
+    font-weight: 600;
 }
 
 .close-btn {
     position: absolute;
-    top: 10px;
-    right: 15px;
-    font-size: 1.5em;
+    top: 15px;
+    right: 20px;
+    font-size: 1.8em;
     cursor: pointer;
-    color: #2c3e50;
+    color: #e74c3c; /* Màu đỏ cho nút đóng */
+    transition: color 0.3s, transform 0.3s;
 }
 
 .close-btn:hover {
-    color: #e74c3c;
+    color: #c0392b; /* Màu đậm hơn khi hover */
+    transform: rotate(90deg); /* Xoay nút khi hover */
 }
 
 @media (max-width: 768px) {
@@ -423,6 +445,15 @@ body {
     .modal-content {
         width: 95%;
         max-width: 400px;
+        padding: 20px;
+    }
+
+    .modal-content .sensor-detail {
+        padding: 8px 12px;
+    }
+
+    .modal-content h2 {
+        font-size: 1.3em;
     }
 }
 
@@ -464,6 +495,10 @@ body {
     }
 
     .modal-content .sensor-detail span {
-        font-size: 0.9em;
+        font-size: 1em;
+    }
+
+    .close-btn {
+        font-size: 1.5em;
     }
 }
