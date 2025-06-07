@@ -313,7 +313,7 @@ body {
     color: #2c3e50;
 }
 
-/* Modal styles - Thiết kế mới theo yêu cầu */
+/* Modal styles */
 .modal {
     display: none;
     position: fixed;
@@ -322,21 +322,18 @@ body {
     top: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.6);
+    background-color: rgba(0, 0, 0, 0.5);
     justify-content: center;
     align-items: center;
 }
 
 .modal-content {
-    background-color: #00e400; /* Màu nền trùng với vòng tròn AQI (good) */
+    background-color: #fff;
     padding: 20px;
     border-radius: 10px;
     width: 90%;
-    max-width: 600px;
+    max-width: 500px;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
     position: relative;
     animation: slideIn 0.3s ease;
 }
@@ -346,81 +343,28 @@ body {
     to { transform: translateY(0); opacity: 1; }
 }
 
-.modal-content .content-wrapper {
-    display: flex;
-    justify-content: space-between;
-    width: 100%;
-    margin-top: 10px;
-}
-
-.modal-content .left-section {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    width: 30%;
-}
-
-.modal-content .left-section .aqi-value {
-    font-size: 2.5em;
-    font-weight: bold;
-    color: #fff;
-    margin: 0;
-}
-
-.modal-content .left-section .aqi-status {
-    background-color: #fff;
-    padding: 5px 15px;
-    border-radius: 5px;
-    margin-top: 5px;
-    font-size: 1.1em;
+.modal-content h2 {
+    margin-top: 0;
     color: #2c3e50;
-    font-weight: 600;
+    text-align: center;
 }
 
-.modal-content .center-section {
-    width: 30%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-.modal-content .center-section img {
-    max-width: 100%;
-    height: auto;
-}
-
-.modal-content .right-section {
-    width: 30%;
+.modal-content .sensor-details {
     display: flex;
     flex-direction: column;
-    gap: 5px;
+    gap: 10px;
 }
 
-.modal-content .right-section .pollutant-item {
+.modal-content .sensor-detail {
     display: flex;
     justify-content: space-between;
-    color: #fff;
+    padding: 8px;
+    border-bottom: 1px solid #ddd;
+}
+
+.modal-content .sensor-detail span {
     font-size: 1em;
-}
-
-.modal-content .bottom-section {
-    display: flex;
-    justify-content: space-between;
-    width: 100%;
-    margin-top: 15px;
-    color: #fff;
-}
-
-.modal-content .bottom-section .temp-item,
-.modal-content .bottom-section .hum-item {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-}
-
-.modal-content .bottom-section img {
-    width: 20px;
-    height: 20px;
+    color: #2c3e50;
 }
 
 .close-btn {
@@ -429,7 +373,7 @@ body {
     right: 15px;
     font-size: 1.5em;
     cursor: pointer;
-    color: #fff;
+    color: #2c3e50;
 }
 
 .close-btn:hover {
@@ -479,25 +423,6 @@ body {
     .modal-content {
         width: 95%;
         max-width: 400px;
-        padding: 15px;
-    }
-
-    .modal-content .content-wrapper {
-        flex-direction: column;
-        align-items: center;
-    }
-
-    .modal-content .left-section,
-    .modal-content .center-section,
-    .modal-content .right-section {
-        width: 100%;
-        margin-bottom: 10px;
-    }
-
-    .modal-content .bottom-section {
-        flex-direction: column;
-        align-items: center;
-        gap: 10px;
     }
 }
 
@@ -535,18 +460,10 @@ body {
 
     .modal-content {
         width: 90%;
-        padding: 10px;
+        padding: 15px;
     }
 
-    .modal-content .aqi-value {
-        font-size: 2em;
-    }
-
-    .modal-content .aqi-status {
-        font-size: 1em;
-    }
-
-    .modal-content .right-section .pollutant-item {
+    .modal-content .sensor-detail span {
         font-size: 0.9em;
     }
 }
