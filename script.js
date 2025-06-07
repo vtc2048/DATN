@@ -63,21 +63,36 @@ function showDetailModal(circle) {
     }
 
     modal.innerHTML = `
-        <div class="modal-content">
+        <div class="modal-content ${aqiLevel}">
             <span class="close-btn">×</span>
-            <h2>Chi tiết thông số không khí</h2>
-            <div class="sensor-details">
-                <div class="sensor-detail"><span>AQI:</span><span>${sensorData.aqi}</span></div>
-                <div class="sensor-detail"><span>Nhiệt độ:</span><span>${sensorData.temperature.toFixed(1)} °C</span></div>
-                <div class="sensor-detail"><span>Độ ẩm:</span><span>${sensorData.humidity.toFixed(1)} %</span></div>
-                <div class="sensor-detail"><span>NO2:</span><span>${sensorData.no2} µg/m³</span></div>
-                <div class="sensor-detail"><span>SO2:</span><span>${sensorData.so2} µg/m³</span></div>
-                <div class="sensor-detail"><span>PM10:</span><span>${sensorData.pm10} µg/m³</span></div>
-                <div class="sensor-detail"><span>PM2.5:</span><span>${sensorData.pm25} µg/m³</span></div>
-                <div class="sensor-detail"><span>CO:</span><span>${sensorData.co} µg/m³</span></div>
-                <div class="sensor-detail"><span>UV:</span><span>${sensorData.uv} mW/cm²</span></div>
+            <div class="modal-aqi-container">
+                <div class="modal-aqi-left">
+                    <div class="aqi-value">${sensorData.aqi}</div>
+                    <div class="aqi-status">${aqiText}</div>
+                </div>
+                <div class="modal-aqi-center">
+                    <img src="${aqiImage}" alt="AQI trạng thái" class="aqi-image">
+                </div>
+                <div class="modal-aqi-right">
+                    <p>PM10: ${sensorData.pm10} µg/m³</p>
+                    <p>PM2.5: ${sensorData.pm25} µg/m³</p>
+                    <p>CO: ${sensorData.co} µg/m³</p>
+                    <p>SO2: ${sensorData.so2} µg/m³</p>
+                    <p>NO2: ${sensorData.no2} µg/m³</p>
+                </div>
+            </div>
+            <div class="modal-bottom">
+                <div class="temp-hum">
+                    <img src="img/temp.png" alt="Nhiệt độ" class="icon-small">
+                    <span>${sensorData.temperature.toFixed(1)} °C</span>
+                </div>
+                <div class="temp-hum">
+                    <img src="img/hum.png" alt="Độ ẩm" class="icon-small">
+                    <span>${sensorData.humidity.toFixed(1)} %</span>
+                </div>
             </div>
         </div>
+
     `;
 
     modal.style.display = 'flex'; // Luôn hiển thị modal khi gọi hàm
@@ -330,6 +345,7 @@ function renderMapFromData(data, openPopups = new Map()) {
         // Lưu trữ dữ liệu cảm biến cho vòng tròn
         const sensorData = {
             aqi: aqiData.aqi,
+            aqi_level: aqiData.level,
             temperature: obj.temperature,
             humidity: obj.humidity,
             no2: obj.no2,
