@@ -253,7 +253,7 @@ function fetchData() {
             document.getElementById("pm10").textContent = obj.pm10 + " µg/m³";
             document.getElementById("pm25").textContent = obj.pm25 + " µg/m³";
             document.getElementById("co").textContent = obj.co + " µg/m³";
-            document.getElementById("uv").textContent = obj.uv + "mW/cm2";
+            document.getElementById("uv").textContent = obj.uv + " mW/cm2";
             document.getElementById("aqi").textContent = aqiData.aqi; // Cập nhật AQI
 
             const aqiIndicator = document.getElementById("aqiIndicator");
