@@ -85,9 +85,9 @@ function calculateAQIFromSensors(obj) {
 function getAQILevel(aqi) {
     if (aqi <= 50) return "good";
     if (aqi <= 100) return "moderate";
-    if (aqi <= 150) return "unhealthy-for-sensitive";
+    if (aqi <= 150) return "poor";
     if (aqi <= 200) return "unhealthy";
-    if (aqi <= 300) return "very-unhealthy";
+    if (aqi <= 300) return "severe";
     return "hazardous";
 }
 
@@ -95,9 +95,9 @@ function getAQIColor(level) {
     switch (level) {
         case 'good': return '#00e400';
         case 'moderate': return '#ffff00';
-        case 'unhealthy-for-sensitive': return '#ff7e00';
+        case 'poor': return '#ff7e00';
         case 'unhealthy': return '#ff0000';
-        case 'very-unhealthy': return '#99004c';
+        case 'severe': return '#99004c';
         case 'hazardous': return '#7e0023';
         default: return '#000000';
     }
