@@ -52,17 +52,9 @@ function adjustPopupSize(popup) {
 
 // Hàm hiển thị modal chi tiết
 function showDetailModal(circle) {
-    const sensorData = circle.sensorData; // Lấy dữ liệu cảm biến từ vòng tròn
-    const aqiLevel = getAQILevel(sensorData.aqi); // Lấy mức AQI
-    const aqiColor = getAQIColor(aqiLevel); // Lấy màu nền dựa trên mức AQI
-
-    let modal = document.getElementById('detailModal');
-    if (!modal) {
-        modal = document.createElement('div');
-        modal.id = 'detailModal';
-        modal.className = 'modal';
-        document.body.appendChild(modal);
-    }
+    const sensorData = circle.sensorData || {}; // Đảm bảo sensorData không undefined
+    const aqiLevel = getAQILevel(sensorData.aqi || 0); // Giá trị mặc định nếu không có
+    const aqiColor = getAQIColor(aqiLevel) || '#00e400'; // Giá trị mặc định nếu không có
 
     // Đường dẫn hình ảnh trạng thái AQI
     const aqiImageMap = {
@@ -79,31 +71,41 @@ function showDetailModal(circle) {
     const tempIcon = 'img/temp.png';
     const humIcon = 'img/hum.png';
 
-    modal.innerHTML = `
-        <div class="modal-content" style="background-color: ${aqiColor};">
+    let modal = document.getElementById('detailModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'detailModal';
+        modal.className = 'modal';
+        document.body.appendChild(modal);
+    }
+
+    // Tạo nội dung HTML một cách an toàn
+    const content = `
+        <div class="modal-content" style="background-color: ${aqiColor}">
             <span class="close-btn">×</span>
             <div class="content-wrapper">
                 <div class="left-section">
-                    <p class="aqi-value">${sensorData.aqi}</p>
+                    <p class="aqi-value">${sensorData.aqi || 0}</p>
                     <div class="aqi-status">${aqiLevel.toUpperCase()}</div>
                 </div>
                 <div class="center-section">
-                    <img src="${aqiImage}" alt="${aqiLevel} status">
+                    <img src="${aqiImage}" alt="${aqiLevel} status" onerror="this.src='img/good.svg';">
                 </div>
                 <div class="right-section">
-                    <div class="pollutant-item"><span>PM10:</span><span>${sensorData.pm10} µg/m³</span></div>
-                    <div class="pollutant-item"><span>PM2.5:</span><span>${sensorData.pm25} µg/m³</span></div>
-                    <div class="pollutant-item"><span>CO:</span><span>${sensorData.co} µg/m³</span></div>
-                    <div class="pollutant-item"><span>SO2:</span><span>${sensorData.so2} µg/m³</span></div>
-                    <div class="pollutant-item"><span>NO2:</span><span>${sensorData.no2} µg/m³</span></div>
+                    <div class="pollutant-item"><span>PM10:</span><span>${sensorData.pm10 || 0} µg/m³</span></div>
+                    <div class="pollutant-item"><span>PM2.5:</span><span>${sensorData.pm25 || 0} µg/m³</span></div>
+                    <div class="pollutant-item"><span>CO:</span><span>${sensorData.co || 0} µg/m³</span></div>
+                    <div class="pollutant-item"><span>SO2:</span><span>${sensorData.so2 || 0} µg/m³</span></div>
+                    <div class="pollutant-item"><span>NO2:</span><span>${sensorData.no2 || 0} µg/m³</span></div>
                 </div>
             </div>
             <div class="bottom-section">
-                <div class="temp-item"><img src="${tempIcon}" alt="Temperature"><span>${sensorData.temperature.toFixed(1)} °C</span></div>
-                <div class="hum-item"><img src="${humIcon}" alt="Humidity"><span>${sensorData.humidity.toFixed(1)} %</span></div>
+                <div class="temp-item"><img src="${tempIcon}" alt="Temperature" onerror="this.src='img/temp.png';"><span>${(sensorData.temperature || 0).toFixed(1)} °C</span></div>
+                <div class="hum-item"><img src="${humIcon}" alt="Humidity" onerror="this.src='img/hum.png';"><span>${(sensorData.humidity || 0).toFixed(1)} %</span></div>
             </div>
         </div>
     `;
+    modal.innerHTML = content;
 
     modal.style.display = 'flex';
 
